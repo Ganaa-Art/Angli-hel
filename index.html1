@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-Trader Pro — AI Signal Robot</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --s1:       #0b0f1e;
+  --s2:       #0f1628;
+  --border:   #1a2540;
+  --green:    #00f0a0;
+  --red:      #ff3060;
+  --blue:     #3d8fff;
+  --gold:     #ffb800;
+  --purple:   #a259ff;
+  --cyan:     #00d4ff;
+  --text:     #c0d4ee;
+  --muted:    #3a5278;
+  --font:     'Rajdhani', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* Animated background */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,240,160,.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 90%, rgba(61,143,255,.04) 0%, transparent 60%),
+    linear-gradient(rgba(0,240,160,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,160,.025) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── HEADER ── */
+header {
+  position:sticky;top:0;z-index:100;
+  background: rgba(6,8,16,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+
+.brand { display:flex; align-items:center; gap:14px; }
+
+.brand-logo {
+  width:44px;height:44px;border-radius:10px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:22px;font-weight:700;color:#000;
+  box-shadow: 0 0 30px rgba(0,240,160,.4), 0 0 60px rgba(0,240,160,.1);
+  position:relative;
+}
+.brand-logo::after {
+  content:'';position:absolute;inset:-3px;border-radius:13px;
+  border:1px solid rgba(0,240,160,.3);
+}
+
+.brand-name { line-height:1.1; }
+.brand-name h1 {
+  font-family:var(--font);font-size:22px;font-weight:700;
+  color:#fff;letter-spacing:4px;
+}
+.brand-name p { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-top:2px; }
+
+.header-right { display:flex;align-items:center;gap:12px; }
+
+.badge {
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;letter-spacing:2px;
+}
+.badge-live { background:rgba(0,240,160,.08);border:1px solid rgba(0,240,160,.2);color:var(--green); }
+.badge-dot  { width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite; }
+
+/* ── MAIN ── */
+main { position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 20px 80px; }
+
+/* ── STRATEGY PILLS ── */
+.strategy-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;
+}
+
+.s-card {
+  padding:12px;border-radius:12px;
+  background:var(--s1);border:1px solid var(--border);
+  text-align:center;transition:all .3s;
+}
+.s-card:hover { border-color:var(--green);background:rgba(0,240,160,.04); }
+.s-card .s-icon { font-size:20px;margin-bottom:5px; }
+.s-card .s-title { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:3px; }
+.s-card .s-name  { font-weight:600;font-size:13px;color:var(--text); }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-family:var(--mono);font-size:9px;color:var(--muted);
+  letter-spacing:4px;margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title::after { content:'';flex:1;height:1px;background:var(--border); }
+
+/* ── API KEY ── */
+.api-box {
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:18px;margin-bottom:20px;
+}
+.api-box label { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;display:block;margin-bottom:10px; }
+.api-input {
+  width:100%;background:var(--bg);
+  border:1px solid var(--border);border-radius:9px;
+  padding:12px 16px;color:var(--text);
+  font-family:var(--mono);font-size:12px;outline:none;
+  transition:border-color .2s;
+}
+.api-input:focus { border-color:var(--green); }
+.api-hint { font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px; }
+.api-hint a { color:var(--blue);text-decoration:none; }
+.api-hint a:hover { text-decoration:underline; }
+
+/* ── DROP ZONE ── */
+#drop-zone {
+  border:2px dashed var(--border);border-radius:16px;
+  cursor:pointer;background:var(--s1);
+  transition:all .3s;margin-bottom:14px;overflow:hidden;
+  min-height:140px;display:flex;align-items:center;justify-content:center;
+}
+#drop-zone:hover,#drop-zone.drag {
+  border-color:var(--green);
+  background:rgba(0,240,160,.03);
+  box-shadow:0 0 40px rgba(0,240,160,.06);
+}
+#drop-zone.has-image { min-height:auto;border-style:solid;border-color:var(--border); }
+
+.drop-inner { text-align:center;padding:40px 20px; }
+.drop-icon  { font-size:40px;margin-bottom:12px;filter:grayscale(.4); }
+.drop-title { font-family:var(--font);font-size:17px;font-weight:600;color:#fff;margin-bottom:5px; }
+.drop-sub   { font-family:var(--mono);font-size:10px;color:var(--muted); }
+
+#preview { width:100%;display:block;border-radius:14px; }
+#file-input { display:none; }
+
+/* ── BUTTONS ── */
+.btn-row { display:flex;gap:10px;margin-bottom:16px; }
+
+.btn-analyze {
+  flex:1;padding:15px;border:none;border-radius:12px;
+  background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+  color:#000;font-family:var(--font);font-size:16px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:all .3s;
+  box-shadow:0 6px 30px rgba(0,240,160,.25);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-analyze:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:0 10px 40px rgba(0,240,160,.35);
+}
+.btn-analyze:disabled {
+  background:var(--s2);color:var(--muted);cursor:default;
+  transform:none;box-shadow:none;
+}
+
+.btn-clear {
+  padding:15px 20px;border-radius:12px;
+  border:1px solid var(--border);background:var(--s1);
+  color:var(--muted);cursor:pointer;font-size:18px;
+  transition:all .2s;
+}
+.btn-clear:hover { border-color:var(--red);color:var(--red); }
+
+/* ── SPINNER ── */
+.spinner {
+  width:17px;height:17px;
+  border:2px solid rgba(0,0,0,.3);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+/* ── ERROR ── */
+.error-box {
+  background:rgba(255,48,96,.07);
+  border:1px solid rgba(255,48,96,.25);
+  border-radius:12px;padding:14px 16px;
+  font-family:var(--mono);font-size:11px;color:#ff7090;
+  word-break:break-all;margin-bottom:16px;
+  line-height:1.7;
+}
+
+/* ── RESULT CARDS ── */
+.result { display:flex;flex-direction:column;gap:12px;animation:fadeUp .5s ease; }
+
+/* Signal hero */
+.signal-hero {
+  border-radius:16px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.signal-hero::before {
+  content:'';position:absolute;
+  top:-60px;right:-60px;width:200px;height:200px;
+  border-radius:50%;opacity:.06;
+  background:radial-gradient(circle, currentColor 0%, transparent 70%);
+}
+
+.signal-hero-top {
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:18px;
+}
+
+.signal-big {
+  font-family:var(--font);font-size:48px;font-weight:700;
+  line-height:1;letter-spacing:3px;
+}
+.signal-sub { font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px; }
+
+.conf-block { text-align:right; }
+.conf-num   { font-family:var(--font);font-size:44px;font-weight:700;line-height:1; }
+.conf-label { font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px; }
+.rr-label   { font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px; }
+
+.prog-track { background:rgba(255,255,255,.06);border-radius:999px;height:4px;overflow:hidden; }
+.prog-fill  { height:100%;border-radius:999px;transition:width 1.3s cubic-bezier(.4,0,.2,1); }
+
+/* Card */
+.card {
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.card-head {
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+/* Analysis tabs */
+.analysis-grid { display:grid;grid-template-columns:1fr 1fr;gap:0; }
+.analysis-col  { padding:16px; }
+.analysis-col:first-child { border-right:1px solid var(--border); }
+.analysis-label { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-bottom:10px; }
+
+.indicator-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.indicator-row:last-child { border-bottom:none; }
+.ind-name { font-size:13px;font-weight:600;color:var(--text); }
+.ind-val  { font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px; }
+.ind-ok   { background:rgba(0,240,160,.12);color:var(--green); }
+.ind-bad  { background:rgba(255,48,96,.1);color:var(--red); }
+.ind-mid  { background:rgba(255,184,0,.1);color:var(--gold); }
+
+/* Levels */
+.levels-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border); }
+.level-cell  { background:var(--s1);padding:14px 12px; }
+.level-lbl   { font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:5px; }
+.level-val   { font-family:var(--mono);font-size:14px;font-weight:700; }
+
+/* Reasoning */
+.reasoning { padding:16px;font-size:14px;line-height:1.8;color:#8ab4d0; }
+
+/* Telegram */
+.tg-body {
+  padding:14px 16px;font-family:var(--mono);font-size:11px;
+  line-height:1.9;color:var(--muted);white-space:pre-wrap;
+  word-break:break-word;max-height:240px;overflow-y:auto;
+}
+
+.btn-copy {
+  padding:5px 14px;border:none;border-radius:7px;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  background:rgba(61,143,255,.15);color:var(--blue);
+}
+.btn-copy.copied { background:rgba(0,240,160,.18);color:var(--green); }
+
+/* Dow Theory visual */
+.dow-visual {
+  padding:16px;display:flex;gap:8px;flex-wrap:wrap;
+}
+.dow-tag {
+  padding:5px 12px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:1px;
+}
+.dow-bull { background:rgba(0,240,160,.12);color:var(--green);border:1px solid rgba(0,240,160,.25); }
+.dow-bear { background:rgba(255,48,96,.1);color:var(--red);border:1px solid rgba(255,48,96,.2); }
+.dow-neu  { background:rgba(255,184,0,.08);color:var(--gold);border:1px solid rgba(255,184,0,.2); }
+
+/* Animations */
+@keyframes blink   { 0%,100%{opacity:1}50%{opacity:.3} }
+@keyframes spin    { to{transform:rotate(360deg)} }
+@keyframes fadeUp  { from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)} }
+@keyframes glow    { 0%,100%{box-shadow:0 0 30px rgba(0,240,160,.2)}50%{box-shadow:0 0 50px rgba(0,240,160,.4)} }
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+@media(max-width:600px){
+  .strategy-grid{grid-template-columns:repeat(2,1fr);}
+  .levels-grid{grid-template-columns:repeat(2,1fr);}
+  .analysis-grid{grid-template-columns:1fr;}
+  .analysis-col:first-child{border-right:none;border-bottom:1px solid var(--border);}
+  .signal-big{font-size:36px;}
+  .conf-num{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo" style="padding:0;overflow:hidden;border-radius:50%;width:48px;height:48px;">
+    <img src="data:image/jpeg;base64,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" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;">
+  </div>
+    <div class="brand-name">
+      <h1>G-TRADER</h1>
+      <p>DOW · FVG · BOS/CHOCH · H&S</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge badge-live">
+      <div class="badge-dot"></div>
+      AI LIVE
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Strategy overview -->
+  <div class="section-title">СТРАТЕГИ</div>
+  <div class="strategy-grid">
+    <div class="s-card">
+      <div class="s-icon">📈</div>
+      <div class="s-title">DOW THEORY</div>
+      <div class="s-name">HH/HL · LH/LL</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">🔲</div>
+      <div class="s-title">FVG</div>
+      <div class="s-name">Fair Value Gap</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">💥</div>
+      <div class="s-title">BOS / CHOCH</div>
+      <div class="s-name">Structure Break</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">📐</div>
+      <div class="s-title">H&S PATTERN</div>
+      <div class="s-name">Inv H&S · H&S</div>
+    </div>
+  </div>
+
+
+
+  <!-- API Key -->
+  <div class="section-title">ТОХИРГОО</div>
+  <div class="api-box">
+    <label>ANTHROPIC API KEY</label>
+    <input type="password" id="gemini-key" class="api-input" placeholder="sk-ant-api03-...">
+    <p class="api-hint">🔑 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key</p>
+  </div>
+
+  <!-- Upload -->
+  <div class="section-title">CHART ЗУРАГ</div>
+  <div id="drop-zone">
+    <div class="drop-inner" id="placeholder">
+      <div class="drop-icon">📊</div>
+      <div class="drop-title">Chart зураг оруулна уу</div>
+      <div class="drop-sub">TradingView screenshot — drag & drop эсвэл дарна уу</div>
+    </div>
+    <img id="preview" style="display:none">
+  </div>
+  <input type="file" id="file-input" accept="image/*">
+
+  <div class="btn-row" id="btn-row" style="display:none">
+    <button class="btn-analyze" id="btn-analyze" onclick="analyze()">
+      🔍 AI ШИНЖЛЭХ
+    </button>
+    <button class="btn-clear" onclick="clearAll()">✕</button>
+  </div>
+
+  <div class="error-box" id="error-box" style="display:none"></div>
+
+  <div class="result" id="result" style="display:none"></div>
+
+</main>
+
+<script>
+const SYSTEM_PROMPT = `You are G-Trader Pro, an expert Forex/Gold signal AI. Analyze charts using ALL FOUR methods simultaneously:
+
+1. DOW THEORY: Identify trend via Higher Highs/Higher Lows (uptrend) or Lower Highs/Lower Lows (downtrend). Determine if trend is intact or breaking.
+
+2. FVG (Fair Value Gap): Count bearish FVGs (downside gaps) and bullish FVGs (upside gaps). Multiple bearish FVGs = strong downtrend. First bullish FVG after downtrend = potential reversal.
+
+3. BOS/CHOCH:
+   - BOS (Break of Structure): price breaks previous swing high/low continuing trend
+   - CHOCH (Change of Character): price breaks opposite swing, signaling trend reversal
+   Identify which occurred recently.
+
+4. H&S PATTERNS:
+   - Inverse H&S after downtrend = BUY signal
+   - H&S after uptrend = SELL signal
+
+BUY SIGNAL: Dow downtrend → Multiple Bearish FVGs → CHOCH (reversal signal) → Bullish FVG forms → Inverse H&S completes
+SELL SIGNAL: Dow uptrend → Multiple Bullish FVGs → CHOCH → Bearish FVG forms → H&S completes
+
+Respond ONLY with this JSON, no markdown:
+{
+  "signal": "BUY or SELL or WAIT",
+  "pair": "XAUUSD",
+  "timeframe": "detected timeframe",
+  "dow_trend": "BULLISH or BEARISH or SIDEWAYS",
+  "dow_structure": "HH/HL or LH/LL or MIXED",
+  "dow_intact": true,
+  "fvg_bearish_count": 0,
+  "fvg_bullish_count": 0,
+  "fvg_signal": "bearish or bullish or neutral",
+  "bos_detected": true,
+  "choch_detected": true,
+  "bos_choch_type": "BOS or CHOCH or NONE",
+  "bos_choch_direction": "bullish or bearish or none",
+  "pattern_detected": "Inverse H&S or H&S or Forming or None",
+  "pattern_completion": 0,
+  "support_resistance": "price level",
+  "entry": "price",
+  "sl": "price",
+  "tp1": "price",
+  "tp2": "price",
+  "tp3": "price",
+  "rr_ratio": "1:2",
+  "confidence": 0,
+  "reasoning_mn": "Монгол хэлээр дэлгэрэнгүй тайлбар",
+  "reasoning_en": "English explanation"
+}`;
+
+let b64 = null;
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1000;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const url = c.toDataURL('image/jpeg', 0.88);
+      b64 = url.split(',')[1];
+      const prev = document.getElementById('preview');
+      prev.src = url; prev.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('drop-zone').classList.add('has-image');
+      document.getElementById('btn-row').style.display = 'flex';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error-box').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('click', () => document.getElementById('file-input').click());
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); });
+document.getElementById('file-input').addEventListener('change', e => loadFile(e.target.files[0]));
+
+function clearAll() {
+  b64 = null;
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('drop-zone').classList.remove('has-image');
+  document.getElementById('btn-row').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+}
+
+async function analyze() {
+  if (!b64) return;
+
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> ШИНЖИЛЖ БАЙНА...';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+
+  const API_KEY = document.getElementById('gemini-key').value.trim();
+  if (!API_KEY) { showError('Anthropic API Key оруулна уу!'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; return; }
+
+  const payload = JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 2000,
+    system: SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+        { type: 'text', text: 'Analyze this XAUUSD chart using Dow Theory, FVG, BOS/CHOCH, H&S. Return ONLY the JSON.' }
+      ]
+    }]
+  });
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://gtrader-proxy.bayrmagnaiganerdene.workers.dev', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('x-api-key', API_KEY);
+  xhr.setRequestHeader('anthropic-version', '2023-06-01');
+  xhr.timeout = 60000;
+
+  xhr.onload = function() {
+    try {
+      const data = JSON.parse(xhr.responseText);
+      if (data.error) { showError('API: ' + (data.error.message || JSON.stringify(data.error))); }
+      else {
+        const raw = (data.content || []).map(b => b.text || '').join('');
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (!m) { showError('JSON олдсонгүй: ' + raw.slice(0, 200)); }
+        else {
+          let js = m[0];
+          try { renderResult(JSON.parse(js)); }
+          catch(e) {
+            const lc = js.lastIndexOf(',"');
+            js = lc > 0 ? js.slice(0, lc) + '}' : js + '}';
+            try { renderResult(JSON.parse(js)); }
+            catch(e2) { showError('Parse: ' + e2.message); }
+          }
+        }
+      }
+    } catch(e) { showError('Response: ' + e.message + ' | ' + xhr.responseText.slice(0,150)); }
+    btn.disabled = false;
+    btn.innerHTML = '🔍 AI ШИНЖЛЭХ';
+  };
+
+  xhr.onerror = function() { showError('Сүлжээний алдаа: ' + xhr.status); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.ontimeout = function() { showError('Timeout — дахин оролдоно уу'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.send(payload);
+  return;
+
+  try { // unreachable but keeps structure
+  } catch(e) {
+    showError(e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🔍 AI ШИНЖЛЭХ';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.innerHTML = '⚠️ ' + msg;
+  el.style.display = 'block';
+}
+
+function buildTelegram(r) {
+  const e = r.signal==='BUY'?'🟢':r.signal==='SELL'?'🔴':'🟡';
+  const a = r.signal==='BUY'?'📈':r.signal==='SELL'?'📉':'⏳';
+  const bos = r.choch_detected ? `CHOCH (${r.bos_choch_direction})` : r.bos_detected ? `BOS (${r.bos_choch_direction})` : 'Байхгүй';
+  return `${e} G-TRADER SIGNAL ${e}
+
+${a} ${r.signal} — ${r.pair} | ${r.timeframe}
+━━━━━━━━━━━━━━━━━━━━
+📌 Орох:   ${r.entry}
+🛑 SL:     ${r.sl}
+🎯 TP1:   ${r.tp1}
+🎯 TP2:   ${r.tp2}
+🎯 TP3:   ${r.tp3}
+⚖️  R:R =   ${r.rr_ratio}
+━━━━━━━━━━━━━━━━━━━━
+📊 Dow:    ${r.dow_trend} (${r.dow_structure})
+🔲 FVG:    Bear ${r.fvg_bearish_count} | Bull ${r.fvg_bullish_count}
+💥 BOS:    ${bos}
+📐 H&S:   ${r.pattern_detected} (${r.pattern_completion}%)
+🔒 Итгэл: ${r.confidence}%
+━━━━━━━━━━━━━━━━━━━━
+💡 ${r.reasoning_mn}
+
+⚡️ @GTrader_FX`;
+}
+
+function renderResult(r) {
+  const sc = r.signal==='BUY'?'var(--green)':r.signal==='SELL'?'var(--red)':'var(--gold)';
+  const sbg= r.signal==='BUY'?'rgba(0,240,160,.07)':r.signal==='SELL'?'rgba(255,48,96,.07)':'rgba(255,184,0,.06)';
+  const si = r.signal==='BUY'?'📈 BUY':r.signal==='SELL'?'📉 SELL':'⏳ WAIT';
+
+  const dowClass = r.dow_trend==='BULLISH'?'dow-bull':r.dow_trend==='BEARISH'?'dow-bear':'dow-neu';
+  const bosClass = r.choch_detected?'dow-bull':r.bos_detected?'dow-neu':'dow-bear';
+
+  const tg = buildTelegram(r);
+
+  document.getElementById('result').innerHTML = `
+
+    <!-- Signal Hero -->
+    <div class="signal-hero" style="background:${sbg};border:1px solid ${sc}33;">
+      <div class="signal-hero-top">
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;margin-bottom:6px">SIGNAL</div>
+          <div class="signal-big" style="color:${sc}">${si}</div>
+          <div class="signal-sub">${r.pair} · ${r.timeframe}</div>
+        </div>
+        <div class="conf-block">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-bottom:4px">ИТГЭЛЦҮҮР</div>
+          <div class="conf-num" style="color:${sc}">${r.confidence}%</div>
+          <div class="rr-label">R:R ${r.rr_ratio}</div>
+        </div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="prog" style="width:0%;background:${sc};box-shadow:0 0 8px ${sc}"></div>
+      </div>
+    </div>
+
+    <!-- Analysis Grid: Dow + FVG | BOS + H&S -->
+    <div class="card">
+      <div class="card-head">ДҮН ШИНЖИЛГЭЭ</div>
+      <div class="analysis-grid">
+        <div class="analysis-col">
+          <div class="analysis-label">DOW THEORY + FVG</div>
+          <div class="indicator-row">
+            <span class="ind-name">Trend</span>
+            <span class="ind-val ${r.dow_trend==='BULLISH'?'ind-ok':r.dow_trend==='BEARISH'?'ind-bad':'ind-mid'}">${r.dow_trend}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Structure</span>
+            <span class="ind-val ${r.dow_structure.includes('HH')?'ind-ok':r.dow_structure.includes('LH')?'ind-bad':'ind-mid'}">${r.dow_structure}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Trend Intact</span>
+            <span class="ind-val ${r.dow_intact?'ind-ok':'ind-bad'}">${r.dow_intact?'✓ YES':'✗ NO'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Bearish FVG</span>
+            <span class="ind-val ${r.fvg_bearish_count>=3?'ind-ok':'ind-mid'}">${r.fvg_bearish_count} ширхэг</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Bullish FVG</span>
+            <span class="ind-val ${r.fvg_bullish_count>=1?'ind-ok':'ind-bad'}">${r.fvg_bullish_count} ширхэг</span>
+          </div>
+        </div>
+        <div class="analysis-col">
+          <div class="analysis-label">BOS / CHOCH + PATTERN</div>
+          <div class="indicator-row">
+            <span class="ind-name">BOS</span>
+            <span class="ind-val ${r.bos_detected?'ind-ok':'ind-bad'}">${r.bos_detected?'✓ Илэрсэн':'✗ Үгүй'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">CHOCH</span>
+            <span class="ind-val ${r.choch_detected?'ind-ok':'ind-bad'}">${r.choch_detected?'✓ Илэрсэн':'✗ Үгүй'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Хэлбэр</span>
+            <span class="ind-val ${r.bos_choch_type!=='NONE'?'ind-ok':'ind-bad'}">${r.bos_choch_type}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Pattern</span>
+            <span class="ind-val ${r.pattern_detected!=='None'?'ind-ok':'ind-bad'}">${r.pattern_detected}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Гүйцэлт</span>
+            <span class="ind-val ${r.pattern_completion>=70?'ind-ok':r.pattern_completion>=40?'ind-mid':'ind-bad'}">${r.pattern_completion}%</span>
+          </div>
+        </div>
+      </div>
+      <!-- Dow tags -->
+      <div class="dow-visual">
+        <span class="dow-tag ${dowClass}">📊 ${r.dow_trend}</span>
+        <span class="dow-tag ${r.dow_structure.includes('HH')?'dow-bull':'dow-bear'}">${r.dow_structure}</span>
+        <span class="dow-tag ${bosClass}">💥 ${r.bos_choch_type} ${r.bos_choch_type!=='NONE'?'→ '+r.bos_choch_direction:''}</span>
+        <span class="dow-tag ${r.pattern_detected!=='None'?'dow-bull':'dow-neu'}">📐 ${r.pattern_detected}</span>
+      </div>
+    </div>
+
+    <!-- Levels -->
+    <div class="card">
+      <div class="card-head">ҮНИЙН ТҮВШИН</div>
+      <div class="levels-grid">
+        <div class="level-cell">
+          <div class="level-lbl">ОРОХ</div>
+          <div class="level-val" style="color:var(--blue)">${r.entry}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">STOP LOSS</div>
+          <div class="level-val" style="color:var(--red)">${r.sl}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">S/R</div>
+          <div class="level-val" style="color:var(--muted)">${r.support_resistance}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 1 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp1}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 2 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp2}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 3 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp3}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reasoning -->
+    <div class="card">
+      <div class="card-head">AI ТАЙЛБАР</div>
+      <div class="reasoning">${r.reasoning_mn}</div>
+    </div>
+
+    <!-- Telegram -->
+    <div class="card">
+      <div class="card-head">
+        <span>✈️ TELEGRAM SIGNAL</span>
+        <button class="btn-copy" id="copy-btn" onclick="copyTg()">📋 ХУУЛАХ</button>
+      </div>
+      <div class="tg-body" id="tg-text">${tg}</div>
+    </div>
+
+  `;
+
+  document.getElementById('result').style.display = 'flex';
+  setTimeout(() => { document.getElementById('prog').style.width = r.confidence + '%'; }, 80);
+}
+
+function copyTg() {
+  navigator.clipboard.writeText(document.getElementById('tg-text').textContent).then(() => {
+    const b = document.getElementById('copy-btn');
+    b.textContent = '✓ ХУУЛАГДЛАА'; b.classList.add('copied');
+    setTimeout(() => { b.textContent = '📋 ХУУЛАХ'; b.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
