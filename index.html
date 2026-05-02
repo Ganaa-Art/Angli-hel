@@ -1,0 +1,952 @@
+html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-Trader Pro — AI Signal Robot</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --s1:       #0b0f1e;
+  --s2:       #0f1628;
+  --border:   #1a2540;
+  --green:    #00f0a0;
+  --red:      #ff3060;
+  --blue:     #3d8fff;
+  --gold:     #ffb800;
+  --purple:   #a259ff;
+  --cyan:     #00d4ff;
+  --text:     #c0d4ee;
+  --muted:    #3a5278;
+  --font:     'Rajdhani', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+}
+
+/* ── LIGHT MODE ── */
+body.light {
+  --bg:     #f0f4f8;
+  --s1:     #ffffff;
+  --s2:     #e8eef5;
+  --border: #d0dbe8;
+  --text:   #1a2a3a;
+  --muted:  #5a7a98;
+  --green:  #00b87a;
+  --blue:   #2266cc;
+  --red:    #cc2244;
+  --gold:   #cc8800;
+}
+body.light header {
+  background: rgba(240,244,248,.95);
+}
+body.light .brand-name h1 {
+  color: #0a1a2a !important;
+}
+body.light .brand-name p {
+  color: #5a7a98 !important;
+}
+body.light .drop-title {
+  color: #0a1a2a !important;
+}
+body.light .signal-big {
+  filter: brightness(0.85);
+}
+body.light .badge-live {
+  background: rgba(0,180,120,.12);
+  border-color: rgba(0,180,120,.3);
+}
+body.light::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,180,120,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 90%, rgba(61,143,255,.05) 0%, transparent 60%),
+    linear-gradient(rgba(0,180,120,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,180,120,.04) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+}
+
+body.light .btn-analyze {
+  color: #fff;
+}
+body.light .signal-hero {
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* Animated background */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,240,160,.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 90%, rgba(61,143,255,.04) 0%, transparent 60%),
+    linear-gradient(rgba(0,240,160,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,160,.025) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── HEADER ── */
+header {
+  position:sticky;top:0;z-index:100;
+  background: rgba(6,8,16,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+
+.brand { display:flex; align-items:center; gap:14px; }
+
+.brand-logo {
+  width:44px;height:44px;border-radius:10px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:22px;font-weight:700;color:#000;
+  box-shadow: 0 0 30px rgba(0,240,160,.4), 0 0 60px rgba(0,240,160,.1);
+  position:relative;
+}
+.brand-logo::after {
+  content:'';position:absolute;inset:-3px;border-radius:13px;
+  border:1px solid rgba(0,240,160,.3);
+}
+
+.brand-name { line-height:1.1; }
+.brand-name h1 {
+  font-family:var(--font);font-size:22px;font-weight:700;
+  color:#fff;letter-spacing:4px;
+}
+.brand-name p { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-top:2px; }
+
+.header-right { display:flex;align-items:center;gap:12px; }
+
+.badge {
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;letter-spacing:2px;
+}
+.badge-live { background:rgba(0,240,160,.08);border:1px solid rgba(0,240,160,.2);color:var(--green); }
+.badge-dot  { width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite; }
+
+.theme-icon { font-size:22px;cursor:pointer; }
+
+/* ── MAIN ── */
+main { position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 20px 80px; }
+
+/* ── STRATEGY PILLS ── */
+.strategy-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;
+}
+
+.s-card {
+  padding:12px;border-radius:12px;
+  background:var(--s1);border:1px solid var(--border);
+  text-align:center;transition:all .3s;
+}
+.s-card:hover { border-color:var(--green);background:rgba(0,240,160,.04); }
+.s-card .s-icon { font-size:20px;margin-bottom:5px; }
+.s-card .s-title { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:3px; }
+.s-card .s-name  { font-weight:600;font-size:13px;color:var(--text); }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-family:var(--mono);font-size:9px;color:var(--muted);
+  letter-spacing:4px;margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title::after { content:'';flex:1;height:1px;background:var(--border); }
+
+/* ── API KEY ── */
+.api-box {
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:18px;margin-bottom:20px;
+}
+.api-box label { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;display:block;margin-bottom:10px; }
+.api-input {
+  width:100%;background:var(--bg);
+  border:1px solid var(--border);border-radius:9px;
+  padding:12px 16px;color:var(--text);
+  font-family:var(--mono);font-size:12px;outline:none;
+  transition:border-color .2s;
+}
+.api-input:focus { border-color:var(--green); }
+.api-hint { font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px; }
+.api-hint a { color:var(--blue);text-decoration:none; }
+.api-hint a:hover { text-decoration:underline; }
+
+/* ── DROP ZONE ── */
+#drop-zone {
+  border:2px dashed var(--border);border-radius:16px;
+  cursor:pointer;background:var(--s1);
+  transition:all .3s;margin-bottom:14px;overflow:hidden;
+  min-height:140px;display:flex;align-items:center;justify-content:center;
+}
+#drop-zone:hover,#drop-zone.drag {
+  border-color:var(--green);
+  background:rgba(0,240,160,.03);
+  box-shadow:0 0 40px rgba(0,240,160,.06);
+}
+#drop-zone.has-image { min-height:auto;border-style:solid;border-color:var(--border); }
+
+.drop-inner { text-align:center;padding:40px 20px; }
+.drop-icon  { font-size:40px;margin-bottom:12px;filter:grayscale(.4); }
+.drop-title { font-family:var(--font);font-size:17px;font-weight:600;color:#fff;margin-bottom:5px; }
+.drop-sub   { font-family:var(--mono);font-size:10px;color:var(--muted); }
+
+#preview { width:100%;display:block;border-radius:14px; }
+#file-input { display:none; }
+
+/* ── BUTTONS ── */
+.btn-row { display:flex;gap:10px;margin-bottom:16px; }
+
+.btn-analyze {
+  flex:1;padding:15px;border:none;border-radius:12px;
+  background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+  color:#000;font-family:var(--font);font-size:16px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:all .3s;
+  box-shadow:0 6px 30px rgba(0,240,160,.25);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-analyze:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:0 10px 40px rgba(0,240,160,.35);
+}
+.btn-analyze:disabled {
+  background:var(--s2);color:var(--muted);cursor:default;
+  transform:none;box-shadow:none;
+}
+
+.btn-clear {
+  padding:15px 20px;border-radius:12px;
+  border:1px solid var(--border);background:var(--s1);
+  color:var(--muted);cursor:pointer;font-size:18px;
+  transition:all .2s;
+}
+.btn-clear:hover { border-color:var(--red);color:var(--red); }
+
+/* ── SPINNER ── */
+.spinner {
+  width:17px;height:17px;
+  border:2px solid rgba(0,0,0,.3);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+/* ── ERROR ── */
+.error-box {
+  background:rgba(255,48,96,.07);
+  border:1px solid rgba(255,48,96,.25);
+  border-radius:12px;padding:14px 16px;
+  font-family:var(--mono);font-size:11px;color:#ff7090;
+  word-break:break-all;margin-bottom:16px;
+  line-height:1.7;
+}
+
+/* ── RESULT CARDS ── */
+.result { display:flex;flex-direction:column;gap:12px;animation:fadeUp .5s ease; }
+
+/* Signal hero */
+.signal-hero {
+  border-radius:16px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.signal-hero::before {
+  content:'';position:absolute;
+  top:-60px;right:-60px;width:200px;height:200px;
+  border-radius:50%;opacity:.06;
+  background:radial-gradient(circle, currentColor 0%, transparent 70%);
+}
+
+.signal-hero-top {
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:18px;
+}
+
+.signal-big {
+  font-family:var(--font);font-size:48px;font-weight:700;
+  line-height:1;letter-spacing:3px;
+}
+.signal-sub { font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px; }
+
+.conf-block { text-align:right; }
+.conf-num   { font-family:var(--font);font-size:44px;font-weight:700;line-height:1; }
+.conf-label { font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px; }
+.rr-label   { font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px; }
+
+.prog-track { background:rgba(255,255,255,.06);border-radius:999px;height:4px;overflow:hidden; }
+.prog-fill  { height:100%;border-radius:999px;transition:width 1.3s cubic-bezier(.4,0,.2,1); }
+
+/* Card */
+.card {
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.card-head {
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+/* Analysis tabs */
+.analysis-grid { display:grid;grid-template-columns:1fr 1fr;gap:0; }
+.analysis-col  { padding:16px; }
+.analysis-col:first-child { border-right:1px solid var(--border); }
+.analysis-label { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-bottom:10px; }
+
+.indicator-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.indicator-row:last-child { border-bottom:none; }
+.ind-name { font-size:13px;font-weight:600;color:var(--text); }
+.ind-val  { font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px; }
+.ind-ok   { background:rgba(0,240,160,.12);color:var(--green); }
+.ind-bad  { background:rgba(255,48,96,.1);color:var(--red); }
+.ind-mid  { background:rgba(255,184,0,.1);color:var(--gold); }
+
+/* Levels */
+.levels-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border); }
+.level-cell  { background:var(--s1);padding:14px 12px; }
+.level-lbl   { font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:5px; }
+.level-val   { font-family:var(--mono);font-size:14px;font-weight:700; }
+
+/* Reasoning */
+.reasoning { padding:16px;font-size:14px;line-height:1.8;color:#8ab4d0; }
+
+/* Telegram */
+.tg-body {
+  padding:14px 16px;font-family:var(--mono);font-size:11px;
+  line-height:1.9;color:var(--muted);white-space:pre-wrap;
+  word-break:break-word;max-height:240px;overflow-y:auto;
+}
+
+.btn-copy {
+  padding:5px 14px;border:none;border-radius:7px;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  background:rgba(61,143,255,.15);color:var(--blue);
+}
+.btn-copy.copied { background:rgba(0,240,160,.18);color:var(--green); }
+
+/* Dow Theory visual */
+.dow-visual {
+  padding:16px;display:flex;gap:8px;flex-wrap:wrap;
+}
+.dow-tag {
+  padding:5px 12px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:1px;
+}
+.dow-bull { background:rgba(0,240,160,.12);color:var(--green);border:1px solid rgba(0,240,160,.25); }
+.dow-bear { background:rgba(255,48,96,.1);color:var(--red);border:1px solid rgba(255,48,96,.2); }
+.dow-neu  { background:rgba(255,184,0,.08);color:var(--gold);border:1px solid rgba(255,184,0,.2); }
+
+/* Animations */
+@keyframes blink   { 0%,100%{opacity:1}50%{opacity:.3} }
+@keyframes spin    { to{transform:rotate(360deg)} }
+@keyframes fadeUp  { from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)} }
+@keyframes glow    { 0%,100%{box-shadow:0 0 30px rgba(0,240,160,.2)}50%{box-shadow:0 0 50px rgba(0,240,160,.4)} }
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── CONFETTI ── */
+.confetti-piece {
+  position:fixed;width:10px;height:10px;
+  border-radius:2px;pointer-events:none;z-index:9999;
+  animation:confetti-fall linear forwards;
+}
+@keyframes confetti-fall {
+  0%   { transform:translateY(-20px) rotate(0deg); opacity:1; }
+  100% { transform:translateY(100vh) rotate(720deg); opacity:0; }
+}
+
+/* ── WIN RATE ── */
+.wr-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px; }
+.wr-cell {
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:12px;padding:14px 10px;text-align:center;
+}
+.wr-num  { font-family:var(--font);font-size:28px;font-weight:700;line-height:1;margin-bottom:4px; }
+.wr-lbl  { font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px; }
+.wr-bar-track { height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin:12px 16px 0; }
+.wr-bar-fill  { height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width 1s ease; }
+
+.outcome-btns { display:flex;gap:8px;padding:0 16px 16px; }
+.outcome-btn {
+  flex:1;padding:10px;border-radius:10px;border:none;
+  font-family:var(--font);font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.btn-win  { background:rgba(0,240,160,.15);color:var(--green);border:1px solid rgba(0,240,160,.3); }
+.btn-win:hover  { background:rgba(0,240,160,.25); }
+.btn-lose { background:rgba(255,48,96,.1);color:var(--red);border:1px solid rgba(255,48,96,.2); }
+.btn-lose:hover { background:rgba(255,48,96,.2); }
+.btn-reset{ background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border); }
+.btn-reset:hover{ color:var(--text); }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed;bottom:0;left:0;right:0;z-index:998;
+  background:rgba(11,15,30,.92);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-around;
+  padding:10px 0 16px;
+}
+body.light .bottom-nav {
+  background:rgba(255,255,255,.92);
+}
+.nav-item {
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:4px 16px;border-radius:12px;
+  transition:all .2s;flex:1;
+  border:none;background:none;
+}
+.nav-item:hover { background:rgba(0,240,160,.08); }
+.nav-item.active .nav-icon { color:var(--green); }
+.nav-item.active .nav-label { color:var(--green); }
+.nav-icon { font-size:20px;line-height:1; }
+.nav-label {
+  font-family:var(--mono);font-size:9px;
+  color:var(--muted);letter-spacing:1px;
+}
+/* Push content above nav */
+main { padding-bottom: 100px; }
+
+@media(max-width:600px){
+  .strategy-grid{grid-template-columns:repeat(2,1fr);}
+  .levels-grid{grid-template-columns:repeat(2,1fr);}
+  .analysis-grid{grid-template-columns:1fr;}
+  .analysis-col:first-child{border-right:none;border-bottom:1px solid var(--border);}
+  .signal-big{font-size:36px;}
+  .conf-num{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo" style="padding:0;overflow:hidden;border-radius:50%;width:48px;height:48px;">
+    <img src="data:image/jpeg;base64,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" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;">
+  </div>
+    <div class="brand-name">
+      <h1>G-TRADER</h1>
+      <p>DOW · FVG · BOS/CHOCH · H&S</p>
+    </div>
+  </div>
+  <div class="header-right">
+
+    <div class="badge badge-live">
+      <div class="badge-dot"></div>
+      AI LIVE
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Strategy overview -->
+  <div class="section-title">СТРАТЕГИ</div>
+  <div class="strategy-grid">
+    <div class="s-card">
+      <div class="s-icon">📈</div>
+      <div class="s-title">DOW THEORY</div>
+      <div class="s-name">HH/HL · LH/LL</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">🔲</div>
+      <div class="s-title">FVG</div>
+      <div class="s-name">Fair Value Gap</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">💥</div>
+      <div class="s-title">BOS / CHOCH</div>
+      <div class="s-name">Structure Break</div>
+    </div>
+    <div class="s-card">
+      <div class="s-icon">📐</div>
+      <div class="s-title">H&S PATTERN</div>
+      <div class="s-name">Inv H&S · H&S</div>
+    </div>
+  </div>
+
+
+
+  <!-- Upload -->
+  <div class="section-title">CHART ЗУРАГ</div>
+  <div id="drop-zone">
+    <div class="drop-inner" id="placeholder">
+      <div class="drop-icon">📊</div>
+      <div class="drop-title">Chart зураг оруулна уу</div>
+      <div class="drop-sub">TradingView screenshot — drag & drop эсвэл дарна уу</div>
+    </div>
+    <img id="preview" style="display:none">
+  </div>
+  <input type="file" id="file-input" accept="image/*">
+
+  <div class="btn-row" id="btn-row" style="display:none">
+    <button class="btn-analyze" id="btn-analyze" onclick="analyze()">
+      🔍 AI ШИНЖЛЭХ
+    </button>
+    <button class="btn-clear" onclick="clearAll()">✕</button>
+  </div>
+
+  <!-- API Key -->
+  <div class="api-box" style="margin-bottom:12px">
+    <label>ANTHROPIC API KEY</label>
+    <input type="password" id="gemini-key" class="api-input" placeholder="sk-ant-api03-...">
+    <p class="api-hint">🔑 console.anthropic.com → API Keys → Create Key</p>
+  </div>
+
+  <div class="error-box" id="error-box" style="display:none"></div>
+
+  <div class="result" id="result" style="display:none"></div>
+
+</main>
+
+<script>
+const SYSTEM_PROMPT = `You are G-Trader Pro, an expert Forex/Gold signal AI. Analyze charts using ALL FOUR methods simultaneously:
+
+1. DOW THEORY: Identify trend via Higher Highs/Higher Lows (uptrend) or Lower Highs/Lower Lows (downtrend). Determine if trend is intact or breaking.
+
+2. FVG (Fair Value Gap): Count bearish FVGs (downside gaps) and bullish FVGs (upside gaps). Multiple bearish FVGs = strong downtrend. First bullish FVG after downtrend = potential reversal.
+
+3. BOS/CHOCH:
+   - BOS (Break of Structure): price breaks previous swing high/low continuing trend
+   - CHOCH (Change of Character): price breaks opposite swing, signaling trend reversal
+   Identify which occurred recently.
+
+4. H&S PATTERNS:
+   - Inverse H&S after downtrend = BUY signal
+   - H&S after uptrend = SELL signal
+
+BUY SIGNAL: Dow downtrend → Multiple Bearish FVGs → CHOCH (reversal signal) → Bullish FVG forms → Inverse H&S completes
+SELL SIGNAL: Dow uptrend → Multiple Bullish FVGs → CHOCH → Bearish FVG forms → H&S completes
+
+Respond ONLY with this JSON, no markdown:
+{
+  "signal": "BUY or SELL or WAIT",
+  "pair": "XAUUSD",
+  "timeframe": "detected timeframe",
+  "dow_trend": "BULLISH or BEARISH or SIDEWAYS",
+  "dow_structure": "HH/HL or LH/LL or MIXED",
+  "dow_intact": true,
+  "fvg_bearish_count": 0,
+  "fvg_bullish_count": 0,
+  "fvg_signal": "bearish or bullish or neutral",
+  "bos_detected": true,
+  "choch_detected": true,
+  "bos_choch_type": "BOS or CHOCH or NONE",
+  "bos_choch_direction": "bullish or bearish or none",
+  "pattern_detected": "Inverse H&S or H&S or Forming or None",
+  "pattern_completion": 0,
+  "support_resistance": "price level",
+  "entry": "price",
+  "sl": "price",
+  "tp1": "price",
+  "tp2": "price",
+  "tp3": "price",
+  "rr_ratio": "1:2",
+  "confidence": 0,
+  "reasoning_mn": "Монгол хэлээр дэлгэрэнгүй тайлбар",
+  "reasoning_en": "English explanation"
+}`;
+
+let b64 = null;
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1000;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const url = c.toDataURL('image/jpeg', 0.75);
+      b64 = url.split(',')[1];
+      const prev = document.getElementById('preview');
+      prev.src = url; prev.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('drop-zone').classList.add('has-image');
+      document.getElementById('btn-row').style.display = 'flex';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error-box').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('click', () => document.getElementById('file-input').click());
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); });
+document.getElementById('file-input').addEventListener('change', e => loadFile(e.target.files[0]));
+
+function clearAll() {
+  b64 = null;
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('drop-zone').classList.remove('has-image');
+  document.getElementById('btn-row').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+}
+
+async function analyze() {
+  if (!b64) return;
+
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> ШИНЖИЛЖ БАЙНА...';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+
+  const API_KEY = document.getElementById('gemini-key').value.trim();
+  if (!API_KEY) { showError('Anthropic API Key оруулна уу!'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; return; }
+
+  const payload = JSON.stringify({
+    model: 'claude-sonnet-4-5',
+    max_tokens: 2000,
+    system: SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+        { type: 'text', text: 'Analyze this XAUUSD chart using Dow Theory, FVG, BOS/CHOCH, H&S. Return ONLY the JSON.' }
+      ]
+    }]
+  });
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://gtrader-proxy.bayrmagnaiganerdene.workers.dev', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('x-api-key', API_KEY);
+  xhr.setRequestHeader('anthropic-version', '2023-06-01');
+  xhr.timeout = 60000;
+
+  xhr.onload = function() {
+    try {
+      const data = JSON.parse(xhr.responseText);
+      if (data.error) { showError('API: ' + (data.error.message || JSON.stringify(data.error))); }
+      else {
+        const raw = (data.content || []).map(b => b.text || '').join('');
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (!m) { showError('JSON олдсонгүй: ' + raw.slice(0, 200)); }
+        else {
+          let js = m[0];
+          try { renderResult(JSON.parse(js)); }
+          catch(e) {
+            const lc = js.lastIndexOf(',"');
+            js = lc > 0 ? js.slice(0, lc) + '}' : js + '}';
+            try { renderResult(JSON.parse(js)); }
+            catch(e2) { showError('Parse: ' + e2.message); }
+          }
+        }
+      }
+    } catch(e) { showError('Response: ' + e.message + ' | ' + xhr.responseText.slice(0,150)); }
+    btn.disabled = false;
+    btn.innerHTML = '🔍 AI ШИНЖЛЭХ';
+  };
+
+  xhr.onerror = function() { showError('Сүлжээний алдаа: ' + xhr.status); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.ontimeout = function() { showError('Timeout — дахин оролдоно уу'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.send(payload);
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.innerHTML = '⚠️ ' + msg;
+  el.style.display = 'block';
+}
+
+function buildTelegram(r) {
+  const e = r.signal==='BUY'?'🟢':r.signal==='SELL'?'🔴':'🟡';
+  const a = r.signal==='BUY'?'📈':r.signal==='SELL'?'📉':'⏳';
+  const bos = r.choch_detected ? `CHOCH (${r.bos_choch_direction})` : r.bos_detected ? `BOS (${r.bos_choch_direction})` : 'Байхгүй';
+  return `${e} G-TRADER SIGNAL ${e}
+
+${a} ${r.signal} — ${r.pair} | ${r.timeframe}
+━━━━━━━━━━━━━━━━━━━━
+📌 Орох:   ${r.entry}
+🛑 SL:     ${r.sl}
+🎯 TP1:   ${r.tp1}
+🎯 TP2:   ${r.tp2}
+🎯 TP3:   ${r.tp3}
+⚖️  R:R =   ${r.rr_ratio}
+━━━━━━━━━━━━━━━━━━━━
+📊 Dow:    ${r.dow_trend} (${r.dow_structure})
+🔲 FVG:    Bear ${r.fvg_bearish_count} | Bull ${r.fvg_bullish_count}
+💥 BOS:    ${bos}
+📐 H&S:   ${r.pattern_detected} (${r.pattern_completion}%)
+🔒 Итгэл: ${r.confidence}%
+━━━━━━━━━━━━━━━━━━━━
+💡 ${r.reasoning_mn}
+
+⚡️ @GTrader_FX`;
+}
+
+function renderResult(r) {
+  const sc = r.signal==='BUY'?'var(--green)':r.signal==='SELL'?'var(--red)':'var(--gold)';
+  const sbg= r.signal==='BUY'?'rgba(0,240,160,.07)':r.signal==='SELL'?'rgba(255,48,96,.07)':'rgba(255,184,0,.06)';
+  const si = r.signal==='BUY'?'📈 BUY':r.signal==='SELL'?'📉 SELL':'⏳ WAIT';
+
+  const dowClass = r.dow_trend==='BULLISH'?'dow-bull':r.dow_trend==='BEARISH'?'dow-bear':'dow-neu';
+  const bosClass = r.choch_detected?'dow-bull':r.bos_detected?'dow-neu':'dow-bear';
+
+  const tg = buildTelegram(r);
+
+  document.getElementById('result').innerHTML = `
+
+    <!-- Signal Hero -->
+    <div class="signal-hero" style="background:${sbg};border:1px solid ${sc}33;">
+      <div class="signal-hero-top">
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:4px;margin-bottom:6px">SIGNAL</div>
+          <div class="signal-big" style="color:${sc}">${si}</div>
+          <div class="signal-sub">${r.pair} · ${r.timeframe}</div>
+        </div>
+        <div class="conf-block">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:3px;margin-bottom:4px">ИТГЭЛЦҮҮР</div>
+          <div class="conf-num" style="color:${sc}">${r.confidence}%</div>
+          <div class="rr-label">R:R ${r.rr_ratio}</div>
+        </div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="prog" style="width:0%;background:${sc};box-shadow:0 0 8px ${sc}"></div>
+      </div>
+    </div>
+
+    <!-- Analysis Grid: Dow + FVG | BOS + H&S -->
+    <div class="card">
+      <div class="card-head">ДҮН ШИНЖИЛГЭЭ</div>
+      <div class="analysis-grid">
+        <div class="analysis-col">
+          <div class="analysis-label">DOW THEORY + FVG</div>
+          <div class="indicator-row">
+            <span class="ind-name">Trend</span>
+            <span class="ind-val ${r.dow_trend==='BULLISH'?'ind-ok':r.dow_trend==='BEARISH'?'ind-bad':'ind-mid'}">${r.dow_trend}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Structure</span>
+            <span class="ind-val ${r.dow_structure.includes('HH')?'ind-ok':r.dow_structure.includes('LH')?'ind-bad':'ind-mid'}">${r.dow_structure}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Trend Intact</span>
+            <span class="ind-val ${r.dow_intact?'ind-ok':'ind-bad'}">${r.dow_intact?'✓ YES':'✗ NO'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Bearish FVG</span>
+            <span class="ind-val ${r.fvg_bearish_count>=3?'ind-ok':'ind-mid'}">${r.fvg_bearish_count} ширхэг</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Bullish FVG</span>
+            <span class="ind-val ${r.fvg_bullish_count>=1?'ind-ok':'ind-bad'}">${r.fvg_bullish_count} ширхэг</span>
+          </div>
+        </div>
+        <div class="analysis-col">
+          <div class="analysis-label">BOS / CHOCH + PATTERN</div>
+          <div class="indicator-row">
+            <span class="ind-name">BOS</span>
+            <span class="ind-val ${r.bos_detected?'ind-ok':'ind-bad'}">${r.bos_detected?'✓ Илэрсэн':'✗ Үгүй'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">CHOCH</span>
+            <span class="ind-val ${r.choch_detected?'ind-ok':'ind-bad'}">${r.choch_detected?'✓ Илэрсэн':'✗ Үгүй'}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Хэлбэр</span>
+            <span class="ind-val ${r.bos_choch_type!=='NONE'?'ind-ok':'ind-bad'}">${r.bos_choch_type}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Pattern</span>
+            <span class="ind-val ${r.pattern_detected!=='None'?'ind-ok':'ind-bad'}">${r.pattern_detected}</span>
+          </div>
+          <div class="indicator-row">
+            <span class="ind-name">Гүйцэлт</span>
+            <span class="ind-val ${r.pattern_completion>=70?'ind-ok':r.pattern_completion>=40?'ind-mid':'ind-bad'}">${r.pattern_completion}%</span>
+          </div>
+        </div>
+      </div>
+      <!-- Dow tags -->
+      <div class="dow-visual">
+        <span class="dow-tag ${dowClass}">📊 ${r.dow_trend}</span>
+        <span class="dow-tag ${r.dow_structure.includes('HH')?'dow-bull':'dow-bear'}">${r.dow_structure}</span>
+        <span class="dow-tag ${bosClass}">💥 ${r.bos_choch_type} ${r.bos_choch_type!=='NONE'?'→ '+r.bos_choch_direction:''}</span>
+        <span class="dow-tag ${r.pattern_detected!=='None'?'dow-bull':'dow-neu'}">📐 ${r.pattern_detected}</span>
+      </div>
+    </div>
+
+    <!-- Levels -->
+    <div class="card">
+      <div class="card-head">ҮНИЙН ТҮВШИН</div>
+      <div class="levels-grid">
+        <div class="level-cell">
+          <div class="level-lbl">ОРОХ</div>
+          <div class="level-val" style="color:var(--blue)">${r.entry}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">STOP LOSS</div>
+          <div class="level-val" style="color:var(--red)">${r.sl}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">S/R</div>
+          <div class="level-val" style="color:var(--muted)">${r.support_resistance}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 1 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp1}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 2 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp2}</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-lbl">TP 3 🎯</div>
+          <div class="level-val" style="color:var(--green)">${r.tp3}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reasoning -->
+    <div class="card">
+      <div class="card-head">AI ТАЙЛБАР</div>
+      <div class="reasoning">${r.reasoning_mn}</div>
+    </div>
+
+    <!-- Telegram -->
+    <div class="card">
+      <div class="card-head">
+        <span>✈️ TELEGRAM SIGNAL</span>
+        <button class="btn-copy" id="copy-btn" onclick="copyTg()">📋 ХУУЛАХ</button>
+      </div>
+      <div class="tg-body" id="tg-text">${tg}</div>
+    </div>
+
+  `;
+
+  document.getElementById('result').style.display = 'flex';
+  setTimeout(() => { document.getElementById('prog').style.width = r.confidence + '%'; }, 80);
+  saveToHistory(r);
+  navClick('signal');
+  if (r.signal === 'BUY' || r.signal === 'SELL') {
+    setTimeout(() => launchConfetti(r.signal), 300);
+  }
+}
+
+function copyTg() {
+  navigator.clipboard.writeText(document.getElementById('tg-text').textContent).then(() => {
+    const b = document.getElementById('copy-btn');
+    b.textContent = '✓ ХУУЛАГДЛАА'; b.classList.add('copied');
+    setTimeout(() => { b.textContent = '📋 ХУУЛАХ'; b.classList.remove('copied'); }, 2000);
+  });
+}
+
+let signalHistory = JSON.parse(localStorage.getItem('gtrader-history') || '[]');
+
+function saveToHistory(r) {
+  const entry = {
+    time: new Date().toLocaleString('mn-MN'),
+    signal: r.signal,
+    pair: r.pair,
+    entry: r.entry,
+    sl: r.sl,
+    tp1: r.tp1,
+    confidence: r.confidence
+  };
+  signalHistory.unshift(entry);
+  if (signalHistory.length > 20) signalHistory = signalHistory.slice(0, 20);
+  localStorage.setItem('gtrader-history', JSON.stringify(signalHistory));
+  renderHistory();
+}
+
+// ── CONFETTI ──
+function launchConfetti(type) {
+  const colors = type === 'BUY'
+    ? ['#00f0a0','#00d4ff','#3d8fff','#a259ff']
+    : type === 'SELL'
+    ? ['#ff3060','#ffb800','#ff6090','#ff9000']
+    : ['#ffb800','#fff','#aaa'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*0.8}s;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ── WIN RATE ──
+let wrData = JSON.parse(localStorage.getItem('gtrader-wr') || '{"win":0,"lose":0}');
+
+function updateWRUI() {
+  const total = wrData.win + wrData.lose;
+  const pct = total > 0 ? Math.round(wrData.win / total * 100) : 0;
+  document.getElementById('wr-win').textContent  = wrData.win;
+  document.getElementById('wr-lose').textContent = wrData.lose;
+  document.getElementById('wr-pct').textContent  = pct + '%';
+  document.getElementById('wr-bar').style.width  = pct + '%';
+}
+
+function addWR(type) {
+  if (type === 'win') { wrData.win++; launchConfetti('BUY'); }
+  else { wrData.lose++; }
+  localStorage.setItem('gtrader-wr', JSON.stringify(wrData));
+  updateWRUI();
+}
+
+function resetWR() {
+  if (!confirm('Win rate reset хийх үү?')) return;
+  wrData = {win:0, lose:0};
+  localStorage.setItem('gtrader-wr', JSON.stringify(wrData));
+  updateWRUI();
+}
+
+updateWRUI();
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!signalHistory.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);font-size:12px;">📋 Одоогоор signal түүх байхгүй байна.</div>';
+    return;
+  }
+  el.innerHTML = signalHistory.map(h => {
+    const sc = h.signal==='BUY'?'var(--green)':h.signal==='SELL'?'var(--red)':'var(--gold)';
+    const si = h.signal==='BUY'?'📈':h.signal==='SELL'?'📉':'⏳';
+    return `<div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:${sc};font-family:var(--font);">${si} ${h.signal}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;">${h.time}</div>
+      </div>
+      <div style="text-alig
