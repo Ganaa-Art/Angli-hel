@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+<html lang="mn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>G-Trader Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a0f;--bg2:#0a0f17;--panel:#0d1520;--border:#1a2840;--border2:#243550;--text:#c8dff5;--muted:#4d6a8a;--dim:#2a3f5a;--cyan:#00d4e8;--green:#00e5a0;--red:#ff3860;--gold:#f5a623;--blue:#2979ff;--font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace}
+body.light{--bg:#eef2f7;--bg2:#e4eaf3;--panel:#fff;--border:#d0dcea;--border2:#b8cce0;--text:#1a2a3a;--muted:#6a8aaa;--dim:#b0c4d8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,232,.012) 2px,rgba(0,212,232,.012) 4px)}
+body.light::before{display:none}
+
+/* TICKER */
+.ticker{background:var(–panel);border-bottom:1px solid var(–border);padding:0 16px;height:34px;display:flex;align-items:center;gap:0;overflow:hidden;position:relative;z-index:10}
+.ticker-lbl{font-family:var(–mono);font-size:9px;letter-spacing:3px;color:var(–cyan);padding-right:14px;border-right:1px solid var(–border);margin-right:14px;white-space:nowrap;flex-shrink:0}
+.ticker-scroll{display:flex;gap:28px;animation:tickerMove 28s linear infinite;white-space:nowrap}
+.ticker-scroll:hover{animation-play-state:paused}
+.t-item{display:flex;align-items:center;gap:7px;font-family:var(–mono);font-size:11px}
+.t-name{color:var(–muted);font-size:9px;letter-spacing:1px}
+.t-price{color:var(–text);font-weight:600}
+.t-chg.up{color:var(–green)}.t-chg.dn{color:var(–red)}
+@keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:50;background:rgba(6,10,15,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;box-shadow:0 1px 0 rgba(0,212,232,.08)}
+body.light header{background:rgba(238,242,247,.92)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(0,212,232,.35);box-shadow:0 0 14px rgba(0,212,232,.2)}
+.logo img{width:100%;height:100%;object-fit:cover;object-position:center top}
+.bname h1{font-family:var(–mono);font-size:15px;font-weight:700;color:#fff;letter-spacing:4px;line-height:1}
+body.light .bname h1{color:var(–text)}
+.bname p{font-family:var(–mono);font-size:8px;color:var(–muted);letter-spacing:3px;margin-top:2px}
+.hright{display:flex;align-items:center;gap:8px}
+.live{display:flex;align-items:center;gap:6px;font-family:var(–mono);font-size:9px;letter-spacing:2px;color:var(–green);padding:5px 11px;border-radius:4px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2)}
+.live::before{content:””;width:6px;height:6px;border-radius:50%;background:var(–green);box-shadow:0 0 8px var(–green);animation:blink 1.4s infinite}
+.hbtn{width:35px;height:35px;border-radius:6px;border:1px solid var(–border);background:var(–panel);color:var(–muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.hbtn:hover{border-color:var(–cyan);color:var(–cyan)}
+
+/* SESSIONS */
+.sess-bar{display:flex;border-bottom:1px solid var(–border);background:var(–panel);overflow-x:auto}
+.sess{display:flex;align-items:center;gap:8px;padding:7px 16px;border-right:1px solid var(–border);font-family:var(–mono);font-size:10px;letter-spacing:1px;white-space:nowrap;cursor:default}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(–dim);transition:.3s}
+.sess.on .sdot{background:var(–green);box-shadow:0 0 8px var(–green);animation:pulse 2s infinite}
+.sess.on .sname{color:var(–text)}.sname{color:var(–muted)}
+.sess.on .stime{color:var(–green)}.stime{font-size:9px;color:var(–dim)}
+.utc-clock{margin-left:auto;padding:7px 16px;font-family:var(–mono);font-size:12px;font-weight:600;color:var(–cyan);display:flex;align-items:center;gap:6px;letter-spacing:1px}
+.utc-clock::before{content:“🕐”;font-size:11px}
+
+/* MAIN */
+main{max-width:1080px;margin:0 auto;padding:16px 14px 120px;display:flex;flex-direction:column;gap:13px;position:relative;z-index:1}
+.slabel{font-family:var(–mono);font-size:9px;letter-spacing:4px;color:var(–muted);display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.slabel::after{content:””;flex:1;height:1px;background:linear-gradient(90deg,var(–border),transparent)}
+
+/* STRATEGY GRID */
+.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.sc{background:var(–panel);border:1px solid var(–border);border-radius:10px;padding:11px 10px;text-align:center;cursor:default;transition:.25s;position:relative;overflow:hidden}
+.sc::before{content:””;position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(0,212,232,.04),transparent);opacity:0;transition:.3s}
+.sc:hover{border-color:rgba(0,212,232,.3);transform:translateY(-1px)}.sc:hover::before{opacity:1}
+.sc-ico{font-size:20px;margin-bottom:6px}.sc-sm{font-family:var(–mono);font-size:8px;letter-spacing:2px;color:var(–muted);margin-bottom:3px}.sc-big{font-size:13px;font-weight:600;color:var(–text)}
+
+/* UPLOAD */
+.uzone{background:var(–panel);border:1.5px dashed rgba(0,212,232,.35);border-radius:12px;min-height:180px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.25s;overflow:hidden}
+.uzone:hover,.uzone.drag{border-color:var(–cyan);background:rgba(0,212,232,.03)}
+.uzone.hasimg{min-height:auto;border-style:solid;border-color:var(–border)}
+.uph{text-align:center;padding:30px 20px}.uico{font-size:38px;margin-bottom:10px;opacity:.6}
+.utitle{font-size:18px;font-weight:600;color:var(–text)}.usub{font-family:var(–mono);font-size:10px;color:var(–muted);margin-top:5px;letter-spacing:1px}
+body.light .utitle{color:var(–text)}
+#preview{width:100%;display:none;border-radius:10px}
+#file-input{display:none}
+
+/* API */
+.apiwrap{background:var(–panel);border:1px solid var(–border);border-radius:10px;padding:14px}
+.apiwrap label{font-family:var(–mono);font-size:9px;letter-spacing:4px;color:var(–muted);display:block;margin-bottom:9px}
+.apiinput{width:100%;background:var(–bg2);border:1px solid var(–border);border-radius:7px;padding:11px 13px;color:var(–text);font-family:var(–mono);font-size:12px;outline:none;transition:.2s}
+.apiinput:focus{border-color:var(–cyan);box-shadow:0 0 0 3px rgba(0,212,232,.08)}
+body.light .apiinput{background:#fff;color:#1a2a3a;border-color:var(–border)}
+.apihint{font-family:var(–mono);font-size:10px;color:var(–muted);margin-top:7px}
+.apihint a{color:var(–blue)}
+
+/* BUTTONS */
+.btnrow{display:flex;gap:10px}
+.btan{flex:1;height:48px;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#00c4d8 0%,#00e5a0 50%,#2979ff 100%);background-size:200%;background-position:0% 50%;color:#041010;font-family:var(–mono);font-size:13px;font-weight:700;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .3s;box-shadow:0 8px 22px rgba(0,212,232,.18)}
+.btan:hover:not(:disabled){background-position:100% 50%;transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,212,232,.28)}
+.btan:disabled{opacity:.5;cursor:default;transform:none}
+.btx{width:48px;height:48px;border-radius:8px;border:1px solid var(–border);background:var(–panel);color:var(–muted);cursor:pointer;font-size:17px;transition:.2s}
+.btx:hover{border-color:var(–red);color:var(–red)}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.2);border-top-color:#041010;animation:spin .6s linear infinite}
+
+/* ERROR */
+#errbox{display:none;padding:12px 15px;border-radius:8px;background:rgba(255,56,96,.07);border:1px solid rgba(255,56,96,.18);color:#ff8aa0;font-family:var(–mono);font-size:11px;line-height:1.7}
+
+/* RESULT */
+#result{display:none;flex-direction:column;gap:12px;animation:fadeUp .4s ease}
+
+/* HERO */
+.hero{border-radius:12px;padding:20px;border:1px solid var(–border);background:var(–panel);position:relative;overflow:hidden}
+.hero::before{content:””;position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(–cyan),var(–green),var(–blue))}
+.htop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.smain{font-family:var(–mono);font-size:42px;font-weight:700;line-height:1;letter-spacing:3px}
+.spair{font-family:var(–mono);font-size:10px;color:var(–muted);margin-top:7px;letter-spacing:2px}
+.sright{text-align:right}
+.scl{font-family:var(–mono);font-size:9px;color:var(–muted);letter-spacing:3px;margin-bottom:5px}
+.scn{font-family:var(–mono);font-size:38px;font-weight:700;line-height:1}
+.srr{font-family:var(–mono);font-size:11px;color:var(–muted);margin-top:5px}
+.ptrack{height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:13px}
+body.light .ptrack{background:var(–border)}
+.pfill{height:100%;border-radius:inherit;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.orow{display:flex;gap:10px}
+.obtn{flex:1;height:42px;border-radius:7px;border:1px solid var(–border);font-family:var(–mono);font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:.2s;background:transparent}
+.obtn.w{color:var(–green);border-color:rgba(0,229,160,.24);background:rgba(0,229,160,.05)}.obtn.w:hover{background:rgba(0,229,160,.12)}
+.obtn.l{color:var(–red);border-color:rgba(255,56,96,.22);background:rgba(255,56,96,.05)}.obtn.l:hover{background:rgba(255,56,96,.12)}
+.obtn:disabled{opacity:.35;cursor:default}
+#omsg{display:none;text-align:center;padding:8px;font-family:var(–mono);font-size:11px;border-radius:6px;margin-top:7px}
+
+/* PANEL CARD */
+.pc{background:var(–panel);border:1px solid var(–border);border-radius:10px;overflow:hidden}
+.ph{padding:11px 15px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;font-family:var(–mono);font-size:9px;letter-spacing:4px;color:var(–muted)}
+.btag{font-family:var(–mono);font-size:10px;padding:3px 9px;border-radius:4px;border:1px solid}
+.bok{background:rgba(0,229,160,.07);color:var(–green);border-color:rgba(0,229,160,.18)}
+.bbad{background:rgba(255,56,96,.07);color:var(–red);border-color:rgba(255,56,96,.18)}
+.bmid{background:rgba(245,166,35,.07);color:var(–gold);border-color:rgba(245,166,35,.18)}
+
+/* ANALYSIS */
+.agrid{display:grid;grid-template-columns:1fr 1fr}
+.acol{padding:13px}.acol:first-child{border-right:1px solid var(–border)}
+.albl{font-family:var(–mono);font-size:9px;letter-spacing:3px;color:var(–muted);margin-bottom:9px}
+.ar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+body.light .ar{border-color:var(–border)}
+.ar:last-child{border:none}
+.an{font-size:13px;font-weight:600;color:var(–text)}
+.at{font-family:var(–mono);font-size:10px;padding:3px 9px;border-radius:4px;border:1px solid}
+.ok{background:rgba(0,229,160,.07);color:var(–green);border-color:rgba(0,229,160,.16)}
+.bad{background:rgba(255,56,96,.07);color:var(–red);border-color:rgba(255,56,96,.16)}
+.mid{background:rgba(245,166,35,.07);color:var(–gold);border-color:rgba(245,166,35,.16)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;padding:0 13px 13px}
+.pill{padding:4px 10px;border-radius:4px;font-family:var(–mono);font-size:9px;font-weight:600;letter-spacing:1px;border:1px solid}
+.pbull{color:var(–green);border-color:rgba(0,229,160,.2);background:rgba(0,229,160,.06)}
+.pbear{color:var(–red);border-color:rgba(255,56,96,.2);background:rgba(255,56,96,.06)}
+.pneu{color:var(–gold);border-color:rgba(245,166,35,.18);background:rgba(245,166,35,.06)}
+
+/* LEVELS */
+.lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(–border)}
+.lv{background:var(–panel);padding:12px 11px}
+.ll{font-family:var(–mono);font-size:8px;letter-spacing:3px;color:var(–muted);margin-bottom:5px}
+.lval{font-family:var(–mono);font-size:14px;font-weight:700}
+
+/* REASON */
+.rsn{padding:13px;font-size:14px;line-height:1.85;color:var(–text)}
+
+/* TELEGRAM */
+.tgw{padding:13px}
+.tgtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.tglbl{font-family:var(–mono);font-size:9px;letter-spacing:4px;color:var(–muted)}
+.cpybtn{font-family:var(–mono);font-size:9px;letter-spacing:2px;padding:5px 12px;border-radius:5px;border:1px solid rgba(0,212,232,.22);background:rgba(0,212,232,.07);color:var(–cyan);cursor:pointer;transition:.2s}
+.cpybtn:hover{background:rgba(0,212,232,.13)}
+.tgbody{font-family:var(–mono);font-size:11px;line-height:2;color:var(–muted);white-space:pre-wrap;max-height:230px;overflow-y:auto}
+
+/* WIN RATE */
+.wrgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:13px}
+.wrcell{background:var(–bg2);border:1px solid var(–border);border-radius:8px;padding:12px 10px;text-align:center}
+.wrnum{font-family:var(–mono);font-size:24px;font-weight:700;line-height:1;margin-bottom:4px}
+.wrlbl{font-family:var(–mono);font-size:8px;letter-spacing:2px;color:var(–muted)}
+.wrtrack{height:6px;background:var(–border);border-radius:999px;overflow:hidden;margin:0 13px}
+.wrfill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(–cyan),var(–green));transition:width .8s ease}
+.wrbtns{display:flex;gap:8px;padding:11px 13px 13px}
+.wrbtn{flex:1;padding:9px;border-radius:6px;border:1px solid var(–border);background:var(–bg2);color:var(–text);font-family:var(–mono);font-size:11px;cursor:pointer;transition:.2s}
+.wrbtn.win{color:var(–green);border-color:rgba(0,229,160,.2)}.wrbtn.lose{color:var(–red);border-color:rgba(255,56,96,.2)}
+.wrbtn:hover{transform:translateY(-1px)}
+
+/* HISTORY */
+.histwrap{padding:13px;display:flex;flex-direction:column;gap:8px}
+.hitem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border-radius:8px;background:var(–bg2);border:1px solid var(–border);transition:.2s}
+.hitem:hover{border-color:var(–border2)}
+.hsig{font-family:var(–mono);font-size:13px;font-weight:700}
+.htime{font-family:var(–mono);font-size:9px;color:var(–muted);margin-top:3px}
+.hright{font-family:var(–mono);font-size:10px;color:var(–muted);text-align:right;line-height:1.7}
+
+/* BOTTOM NAV */
+.botnav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;background:rgba(6,10,15,.9);backdrop-filter:blur(20px);border-top:1px solid var(–border)}
+body.light .botnav{background:rgba(238,242,247,.94)}
+.nbtn{flex:1;border:none;background:none;color:var(–muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 8px 13px;cursor:pointer;transition:.2s;border-right:1px solid var(–border)}
+.nbtn:last-child{border-right:none}
+.nbtn:hover{background:rgba(0,212,232,.04)}.nbtn.active{color:var(–cyan)}
+.nbtn.active .nico{filter:drop-shadow(0 0 5px var(–cyan))}
+.nico{font-size:17px;line-height:1}.nlbl{font-family:var(–mono);font-size:8px;letter-spacing:1.5px}
+
+/* CONFETTI */
+.cfp{position:fixed;top:-12px;pointer-events:none;z-index:9999;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){.sg{grid-template-columns:repeat(2,1fr)}.agrid{grid-template-columns:1fr}.acol:first-child{border-right:none;border-bottom:1px solid var(–border)}.lvls{grid-template-columns:repeat(2,1fr)}.smain{font-size:34px}.scn{font-size:30px}.wrgrid{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+
+<div class="ticker">
+  <div class="ticker-lbl">LIVE ▸</div>
+  <div class="ticker-scroll" id="ts">
+    <div class="t-item"><span class="t-name">XAUUSD</span><span class="t-price" id="p-xau">—</span><span class="t-chg" id="c-xau">—</span></div>
+    <div class="t-item"><span class="t-name">EURUSD</span><span class="t-price" id="p-eur">—</span><span class="t-chg" id="c-eur">—</span></div>
+    <div class="t-item"><span class="t-name">GBPUSD</span><span class="t-price" id="p-gbp">—</span><span class="t-chg" id="c-gbp">—</span></div>
+    <div class="t-item"><span class="t-name">USDJPY</span><span class="t-price" id="p-jpy">—</span><span class="t-chg" id="c-jpy">—</span></div>
+    <div class="t-item"><span class="t-name">XAGUSD</span><span class="t-price" id="p-xag">—</span><span class="t-chg" id="c-xag">—</span></div>
+    <div class="t-item"><span class="t-name">XAUUSD</span><span class="t-price" id="p-xau2">—</span><span class="t-chg" id="c-xau2">—</span></div>
+    <div class="t-item"><span class="t-name">EURUSD</span><span class="t-price" id="p-eur2">—</span><span class="t-chg" id="c-eur2">—</span></div>
+    <div class="t-item"><span class="t-name">GBPUSD</span><span class="t-price" id="p-gbp2">—</span><span class="t-chg" id="c-gbp2">—</span></div>
+    <div class="t-item"><span class="t-name">USDJPY</span><span class="t-price" id="p-jpy2">—</span><span class="t-chg" id="c-jpy2">—</span></div>
+    <div class="t-item"><span class="t-name">XAGUSD</span><span class="t-price" id="p-xag2">—</span><span class="t-chg" id="c-xag2">—</span></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="logo"><img src="data:image/jpeg;base64,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" alt="G"></div>
+    <div class="bname"><h1>G-TRADER</h1><p>DOW · FVG · BOS/CHOCH · H&S</p></div>
+  </div>
+  <div class="hright">
+    <div class="live">AI LIVE</div>
+    <button class="hbtn" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<div class="sess-bar">
+  <div class="sess" id="s-sydney"><div class="sdot" id="d-sydney"></div><div><div class="sname">SYDNEY</div><div class="stime">22:00–07:00</div></div></div>
+  <div class="sess" id="s-tokyo"><div class="sdot" id="d-tokyo"></div><div><div class="sname">TOKYO</div><div class="stime">00:00–09:00</div></div></div>
+  <div class="sess" id="s-london"><div class="sdot" id="d-london"></div><div><div class="sname">LONDON</div><div class="stime">08:00–17:00</div></div></div>
+  <div class="sess" id="s-ny"><div class="sdot" id="d-ny"></div><div><div class="sname">NEW YORK</div><div class="stime">13:00–22:00</div></div></div>
+  <div class="utc-clock" id="uclock">00:00:00 UTC</div>
+</div>
+
+<main>
+  <div class="slabel">СТРАТЕГИ</div>
+  <div class="sg">
+    <div class="sc"><div class="sc-ico">📈</div><div class="sc-sm">DOW THEORY</div><div class="sc-big">HH/HL · LH/LL</div></div>
+    <div class="sc"><div class="sc-ico">🔲</div><div class="sc-sm">FVG</div><div class="sc-big">Fair Value Gap</div></div>
+    <div class="sc"><div class="sc-ico">💥</div><div class="sc-sm">BOS / CHOCH</div><div class="sc-big">Structure Shift</div></div>
+    <div class="sc"><div class="sc-ico">📐</div><div class="sc-sm">H&S PATTERN</div><div class="sc-big">Pattern Detect</div></div>
+  </div>
+
+  <div class="slabel">CHART ЗУРАГ</div>
+  <div class="uzone" id="dz">
+    <div class="uph" id="uph"><div class="uico">📊</div><div class="utitle">Chart зураг оруулна уу</div><div class="usub">TradingView screenshot — drag & drop эсвэл дарна уу</div></div>
+    <img id="preview" alt="">
+  </div>
+  <input type="file" id="file-input" accept="image/*">
+
+  <div class="apiwrap">
+    <label>ANTHROPIC API KEY</label>
+    <input type="password" id="api-key" class="apiinput" placeholder="sk-ant-api03-...">
+    <div class="apihint">🔑 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key</div>
+  </div>
+
+  <div class="btnrow" id="brow" style="display:none">
+    <button class="btan" id="analyzeBtn">🔍 AI ШИНЖЛЭХ</button>
+    <button class="btx" id="clearBtn">✕</button>
+  </div>
+  <div id="errbox"></div>
+
+  <div id="result">
+    <div class="hero" id="hero">
+      <div class="htop">
+        <div><div class="smain" id="stxt">WAIT</div><div class="spair" id="spair">XAUUSD · —</div></div>
+        <div class="sright"><div class="scl">ИТГЭЛЦҮҮР</div><div class="scn" id="sconf">0%</div><div class="srr" id="srr">R:R —</div></div>
+      </div>
+      <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+      <div class="orow"><button class="obtn w" id="wob">✅ ЯЛСАН</button><button class="obtn l" id="lob">❌ ЯЛАГДСАН</button></div>
+      <div id="omsg"></div>
+    </div>
+
+```
+<div class="pc">
+  <div class="ph"><span>ДҮН ШИНЖИЛГЭЭ</span><span class="btag bmid" id="sbadge">WAIT</span></div>
+  <div class="agrid">
+    <div class="acol">
+      <div class="albl">DOW THEORY + FVG</div>
+      <div class="ar"><span class="an">Trend</span><span class="at mid" id="tTrend">—</span></div>
+      <div class="ar"><span class="an">Structure</span><span class="at mid" id="tStruct">—</span></div>
+      <div class="ar"><span class="an">Trend Intact</span><span class="at mid" id="tIntact">—</span></div>
+      <div class="ar"><span class="an">Bearish FVG</span><span class="at mid" id="tBFVG">—</span></div>
+      <div class="ar"><span class="an">Bullish FVG</span><span class="at mid" id="tUFVG">—</span></div>
+    </div>
+    <div class="acol">
+      <div class="albl">BOS / CHOCH + PATTERN</div>
+      <div class="ar"><span class="an">BOS</span><span class="at mid" id="tBOS">—</span></div>
+      <div class="ar"><span class="an">CHOCH</span><span class="at mid" id="tCHOCH">—</span></div>
+      <div class="ar"><span class="an">Хэлбэр</span><span class="at mid" id="tType">—</span></div>
+      <div class="ar"><span class="an">Pattern</span><span class="at mid" id="tPat">—</span></div>
+      <div class="ar"><span class="an">Гүйцэлт</span><span class="at mid" id="tComp">—</span></div>
+    </div>
+  </div>
+  <div class="pills">
+    <span class="pill pneu" id="pDow">DOW</span>
+    <span class="pill pneu" id="pStr">STRUCTURE</span>
+    <span class="pill pneu" id="pBOS">BOS</span>
+    <span class="pill pneu" id="pPat">PATTERN</span>
+  </div>
+</div>
+
+<div class="pc">
+  <div class="ph"><span>ҮНИЙН ТҮВШИН</span><span id="tfLbl">—</span></div>
+  <div class="lvls">
+    <div class="lv"><div class="ll">ОРОХ</div><div class="lval" id="lEntry" style="color:var(--blue)">—</div></div>
+    <div class="lv"><div class="ll">STOP LOSS</div><div class="lval" id="lSL" style="color:var(--red)">—</div></div>
+    <div class="lv"><div class="ll">S/R</div><div class="lval" id="lSR" style="color:var(--muted)">—</div></div>
+    <div class="lv"><div class="ll">TP 1 🎯</div><div class="lval" id="lTP1" style="color:var(--green)">—</div></div>
+    <div class="lv"><div class="ll">TP 2 🎯</div><div class="lval" id="lTP2" style="color:var(--green)">—</div></div>
+    <div class="lv"><div class="ll">TP 3 🎯</div><div class="lval" id="lTP3" style="color:var(--green)">—</div></div>
+  </div>
+</div>
+
+<div class="pc">
+  <div class="ph"><span>AI ТАЙЛБАР</span><span id="tfLbl2">—</span></div>
+  <div class="rsn" id="rsn">Зураг оруулж шинжилгээ эхлүүлнэ.</div>
+</div>
+
+<div class="pc">
+  <div class="tgw">
+    <div class="tgtop"><div class="tglbl">✈️ TELEGRAM SIGNAL</div><button class="cpybtn" id="cpyBtn">📋 ХУУЛАХ</button></div>
+    <div class="tgbody" id="tgTxt">—</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="pc">
+    <div class="ph"><span>📊 WIN RATE</span><span>ЛОКАЛ СТАТИСТИК</span></div>
+    <div class="wrgrid">
+      <div class="wrcell"><div class="wrnum" id="wrW" style="color:var(--green)">0</div><div class="wrlbl">ЯЛСАН</div></div>
+      <div class="wrcell"><div class="wrnum" id="wrL" style="color:var(--red)">0</div><div class="wrlbl">ЯЛАГДСАН</div></div>
+      <div class="wrcell"><div class="wrnum" id="wrP" style="color:var(--gold)">0%</div><div class="wrlbl">WIN RATE</div></div>
+    </div>
+    <div class="wrtrack"><div class="wrfill" id="wrBar"></div></div>
+    <div class="wrbtns">
+      <button class="wrbtn win" id="wBtn">✅ ЯЛСАН</button>
+      <button class="wrbtn lose" id="lBtn">❌ ЯЛАГДСАН</button>
+      <button class="wrbtn" id="rBtn">🔄 RESET</button>
+    </div>
+  </div>
+
+  <div class="pc">
+    <div class="ph"><span>📋 SIGNAL ТҮҮХ</span><span>СҮҮЛИЙН 20</span></div>
+    <div class="histwrap" id="hlist"></div>
+  </div>
+</main>
+
+<nav class="botnav">
+  <button class="nbtn active" data-t="s"><div class="nico">📡</div><div class="nlbl">SIGNAL</div></button>
+  <button class="nbtn" data-t="w"><div class="nico">📊</div><div class="nlbl">STATS</div></button>
+  <button class="nbtn" data-t="h"><div class="nico">🗂</div><div class="nlbl">HISTORY</div></button>
+</nav>
+
+<script>
+const SP = `You are G-Trader Pro, expert Forex/Gold AI. Analyze charts using 4 methods simultaneously: 1.DOW THEORY HH/HL uptrend LH/LL downtrend 2.FVG count gaps bearish bullish 3.BOS break of structure CHOCH change of character reversal 4.H&S patterns Inverse H&S=BUY H&S=SELL. Return ONLY this JSON no markdown: {"signal":"BUY or SELL or WAIT","pair":"XAUUSD","timeframe":"detected","dow_trend":"BULLISH or BEARISH or SIDEWAYS","dow_structure":"HH/HL or LH/LL or MIXED","dow_intact":true,"fvg_bearish_count":0,"fvg_bullish_count":0,"fvg_signal":"bearish or bullish or neutral","bos_detected":true,"choch_detected":true,"bos_choch_type":"BOS or CHOCH or NONE","bos_choch_direction":"bullish or bearish or none","pattern_detected":"Inverse H&S or H&S or Forming or None","pattern_completion":0,"support_resistance":"price","entry":"price","sl":"price","tp1":"price","tp2":"price","tp3":"price","rr_ratio":"1:2","confidence":0,"reasoning_mn":"Монгол тайлбар","reasoning_en":"English"}`;
+
+let b64=null, hist=JSON.parse(localStorage.getItem('gt-h')||'[]'), wr=JSON.parse(localStorage.getItem('gt-w')||'{"w":0,"l":0}');
+const $=id=>document.getElementById(id);
+
+// SESSION CLOCK
+const SESS=[{id:'sydney',o:22,c:7},{id:'tokyo',o:0,c:9},{id:'london',o:8,c:17},{id:'ny',o:13,c:22}];
+function clock(){
+  const n=new Date(), h=n.getUTCHours(), m=n.getUTCMinutes(), s=n.getUTCSeconds();
+  $('uclock').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} UTC`;
+  SESS.forEach(ss=>{
+    const open=ss.o<ss.c?(h>=ss.o&&h<ss.c):(h>=ss.o||h<ss.c);
+    $('s-'+ss.id).className='sess '+(open?'on':'');
+    $('d-'+ss.id).className='sdot'+(open?' open':'');
+  });
+}
+setInterval(clock,1000); clock();
+
+// TICKER
+async function fetchTicker(){
+  // Use exchangerate-api for forex, metals-api fallback with static for gold
+  const pairs=[
+    {ids:['xau','xau2'], sym:'XAUUSD', url:'https://api.exchangerate-api.com/v4/latest/XAU', key:'USD', mult:1},
+    {ids:['eur','eur2'], sym:'EURUSD', url:'https://api.exchangerate-api.com/v4/latest/EUR', key:'USD', mult:1},
+    {ids:['gbp','gbp2'], sym:'GBPUSD', url:'https://api.exchangerate-api.com/v4/latest/GBP', key:'USD', mult:1},
+    {ids:['jpy','jpy2'], sym:'USDJPY', url:'https://api.exchangerate-api.com/v4/latest/USD', key:'JPY', mult:1},
+    {ids:['xag','xag2'], sym:'XAGUSD', url:'https://api.exchangerate-api.com/v4/latest/XAG', key:'USD', mult:1},
+  ];
+
+  // Try Binance for crypto-based pairs, fallback to static display
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["EURUSDT","GBPUSDT","USDTJPY"]');
+    const data = await res.json();
+    const map = {eur: data[0], gbp: data[1], jpy: data[2]};
+    Object.keys(map).forEach(k => {
+      const x = map[k];
+      if (!x) return;
+      const pr = parseFloat(x.lastPrice);
+      const cp = parseFloat(x.priceChangePercent);
+      const p = pr < 10 ? pr.toFixed(5) : pr < 100 ? pr.toFixed(4) : pr.toFixed(2);
+      const c = (cp >= 0 ? '+' : '') + cp.toFixed(2) + '%';
+      [k, k+'2'].forEach(id => {
+        const pe = $('p-'+id), ce = $('c-'+id);
+        if(pe) pe.textContent = p;
+        if(ce) { ce.textContent = c; ce.className = 't-chg ' + (cp >= 0 ? 'up' : 'dn'); }
+      });
+    });
+  } catch(e) {}
+
+  // Static gold price display from open source
+  try {
+    const r = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
+    const d = await r.json();
+    if (d && d.items && d.items[0]) {
+      const xau = d.items[0].xauPrice;
+      const xag = d.items[0].xagPrice;
+      if(xau) {
+        ['xau','xau2'].forEach(id => { const e=$('p-'+id); if(e) e.textContent=xau.toFixed(2); });
+        ['xau','xau2'].forEach(id => { const e=$('c-'+id); if(e) { e.textContent='GOLD'; e.className='t-chg up'; }});
+      }
+      if(xag) {
+        ['xag','xag2'].forEach(id => { const e=$('p-'+id); if(e) e.textContent=xag.toFixed(3); });
+        ['xag','xag2'].forEach(id => { const e=$('c-'+id); if(e) { e.textContent='SILVER'; e.className='t-chg up'; }});
+      }
+    }
+  } catch(e) {
+    // Fallback static
+    ['xau','xau2'].forEach(id => { const e=$('p-'+id); if(e) e.textContent='XAUUSD'; });
+    ['xag','xag2'].forEach(id => { const e=$('p-'+id); if(e) e.textContent='XAGUSD'; });
+  }
+}
+fetchTicker(); setInterval(fetchTicker, 15000);
+
+// IMAGE
+function loadF(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1000; let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const url=c.toDataURL('image/jpeg',.82);
+      b64=url.split(',')[1];
+      $('preview').src=url; $('preview').style.display='block';
+      $('uph').style.display='none'; $('dz').classList.add('hasimg');
+      $('brow').style.display='flex'; $('errbox').style.display='none';
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+const dz=$('dz');
+dz.addEventListener('click',()=>$('file-input').click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');loadF(e.dataTransfer.files[0]);});
+$('file-input').addEventListener('change',e=>loadF(e.target.files[0]));
+function clearAll(){b64=null;$('preview').style.display='none';$('uph').style.display='block';dz.classList.remove('hasimg');$('brow').style.display='none';$('result').style.display='none';$('errbox').style.display='none';}
+function showErr(m){const e=$('errbox');e.style.display='block';e.textContent='⚠️ '+m;}
+
+// TG
+function buildTG(r){
+  const i=r.signal==='BUY'?'🟢':r.signal==='SELL'?'🔴':'🟡';
+  const a=r.signal==='BUY'?'📈':r.signal==='SELL'?'📉':'⏳';
+  const b=r.choch_detected?`CHOCH (${r.bos_choch_direction})`:r.bos_detected?`BOS (${r.bos_choch_direction})`:'Байхгүй';
+  return `${i} G-TRADER SIGNAL ${i}
+
+${a} ${r.signal} — ${r.pair} | ${r.timeframe}
+━━━━━━━━━━━━━━━━━━━━
+📌 Орох:   ${r.entry}
+🛑 SL:     ${r.sl}
+🎯 TP1:    ${r.tp1}
+🎯 TP2:    ${r.tp2}
+🎯 TP3:    ${r.tp3}
+⚖️ R:R =   ${r.rr_ratio}
+━━━━━━━━━━━━━━━━━━━━
+📊 Dow:    ${r.dow_trend} (${r.dow_structure})
+🔲 FVG:    Bear ${r.fvg_bearish_count} | Bull ${r.fvg_bullish_count}
+💥 BOS:    ${b}
+📐 H&S:    ${r.pattern_detected} (${r.pattern_completion}%)
+🔒 Итгэл: ${r.confidence}%
+━━━━━━━━━━━━━━━━━━━━
+💡 ${r.reasoning_mn}
+
+⚡️ @GTrader_FX`;}
+
+// CONFETTI
+function confetti(t){
+  const cols=t==='BUY'?['#00d4e8','#00e5a0','#2979ff']:['#ff3860','#f5a623','#00d4e8'];
+  for(let i=0;i<60;i++){const el=document.createElement('div');el.className='cfp';const sz=6+Math.random()*8;el.style.cssText=`left:${Math.random()*100}vw;width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${1.4+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;document.body.appendChild(el);el.addEventListener('animationend',()=>el.remove());}
+}
+
+// WR
+function updWR(){const tot=wr.w+wr.l;const pct=tot?Math.round(wr.w/tot*100):0;$('wrW').textContent=wr.w;$('wrL').textContent=wr.l;$('wrP').textContent=pct+'%';$('wrBar').style.width=pct+'%';}
+function addWR(t){if(t==='w'){wr.w++;confetti('BUY');}else wr.l++;localStorage.setItem('gt-w',JSON.stringify(wr));updWR();}
+function resetWR(){if(!confirm('Win rate reset хийх үү?'))return;wr={w:0,l:0};localStorage.setItem('gt-w',JSON.stringify(wr));updWR();}
+function markOut(t){
+  addWR(t);
+  const msg=$('omsg');
+  if(t==='w'){msg.style.cssText='display:block;background:rgba(0,229,160,.07);color:var(--green);border:1px solid rgba(0,229,160,.18);padding:8px;border-radius:6px;font-family:var(--mono);font-size:11px;text-align:center;margin-top:7px;';msg.textContent='🎉 Амжилттай! Win rate шинэчлэгдлээ.';}
+  else{msg.style.cssText='display:block;background:rgba(255,56,96,.06);color:var(--red);border:1px solid rgba(255,56,96,.16);padding:8px;border-radius:6px;font-family:var(--mono);font-size:11px;text-align:center;margin-top:7px;';msg.textContent='📉 Тэмдэглэгдлээ. Дараагийн signal!';}
+  $('wob').disabled=true; $('lob').disabled=true;
+}
+
+// HISTORY
+function saveH(r){hist.unshift({t:new Date().toLocaleString('mn-MN'),sig:r.signal,pair:r.pair,entry:r.entry,sl:r.sl,tp1:r.tp1,conf:r.confidence});hist=hist.slice(0,20);localStorage.setItem('gt-h',JSON.stringify(hist));rendH();}
+function rendH(){const el=$('hlist');if(!hist.length){el.innerHTML='<div style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);">Signal түүх байхгүй.</div>';return;}el.innerHTML=hist.map(h=>{const cls=h.sig==='BUY'?'pbull':h.sig==='SELL'?'pbear':'pneu';return`<div class="hitem"><div><div class="hsig"><span class="pill ${cls}">${h.sig}</span></div><div class="htime">${h.t}</div></div><div class="hright"><div>${h.pair}</div><div>Entry ${h.entry}</div><div style="color:var(--red)">SL ${h.sl}</div><div style="color:var(--green)">TP1 ${h.tp1}</div><div>${h.conf}%</div></div></div>`;}).join('');}
+
+// RENDER
+function stag(id,tx,cls){const e=$(id);e.className='at '+cls;e.textContent=tx;}
+function spill(id,tx,cls){const e=$(id);e.className='pill '+cls;e.textContent=tx;}
+function renderR(r){
+  const ib=r.signal==='BUY',is=r.signal==='SELL';
+  const sc=ib?'var(--green)':is?'var(--red)':'var(--gold)';
+  const gr=ib?'linear-gradient(90deg,var(--cyan),var(--green))':is?'linear-gradient(90deg,var(--red),#ff6090)':'linear-gradient(90deg,var(--gold),var(--blue))';
+  $('stxt').textContent=ib?'📈 BUY':is?'📉 SELL':'⏳ WAIT'; $('stxt').style.color=sc;
+  $('spair').textContent=r.pair+' · '+r.timeframe;
+  $('sconf').textContent=r.confidence+'%'; $('sconf').style.color=sc;
+  $('srr').textContent='R:R '+r.rr_ratio;
+  $('pfill').style.background=gr;
+  setTimeout(()=>$('pfill').style.width=Math.min(100,Number(r.confidence)||0)+'%',80);
+  $('hero').style.borderColor=ib?'rgba(0,229,160,.28)':is?'rgba(255,56,96,.26)':'rgba(245,166,35,.22)';
+  $('wob').disabled=false; $('lob').disabled=false; $('omsg').style.display='none';
+  stag('sbadge',r.signal,ib?'bok':is?'bbad':'bmid');
+  stag('tTrend',r.dow_trend,r.dow_trend==='BULLISH'?'ok':r.dow_trend==='BEARISH'?'bad':'mid');
+  stag('tStruct',r.dow_structure,r.dow_structure.includes('HH')?'ok':r.dow_structure.includes('LH')?'bad':'mid');
+  stag('tIntact',r.dow_intact?'YES':'NO',r.dow_intact?'ok':'bad');
+  stag('tBFVG',r.fvg_bearish_count+' bear',r.fvg_bearish_count>=3?'ok':'mid');
+  stag('tUFVG',r.fvg_bullish_count+' bull',r.fvg_bullish_count>=1?'ok':'bad');
+  stag('tBOS',r.bos_detected?'YES':'NO',r.bos_detected?'ok':'bad');
+  stag('tCHOCH',r.choch_detected?'YES':'NO',r.choch_detected?'ok':'bad');
+  stag('tType',r.bos_choch_type,r.bos_choch_type!=='NONE'?'ok':'bad');
+  stag('tPat',r.pattern_detected,r.pattern_detected!=='None'?'ok':'bad');
+  stag('tComp',r.pattern_completion+'%',Number(r.pattern_completion)>=70?'ok':Number(r.pattern_completion)>=40?'mid':'bad');
+  spill('pDow',r.dow_trend,r.dow_trend==='BULLISH'?'pbull':r.dow_trend==='BEARISH'?'pbear':'pneu');
+  spill('pStr',r.dow_structure,r.dow_structure.includes('HH')?'pbull':r.dow_structure.includes('LH')?'pbear':'pneu');
+  spill('pBOS',r.bos_choch_type+(r.bos_choch_direction!=='none'?' → '+r.bos_choch_direction:''),r.bos_choch_type==='CHOCH'?'pbull':r.bos_choch_type==='BOS'?'pneu':'pbear');
+  spill('pPat',r.pattern_detected,r.pattern_detected!=='None'?'pbull':'pneu');
+  $('lEntry').textContent=r.entry; $('lSL').textContent=r.sl; $('lSR').textContent=r.support_resistance;
+  $('lTP1').textContent=r.tp1; $('lTP2').textContent=r.tp2; $('lTP3').textContent=r.tp3;
+  $('tfLbl').textContent=r.timeframe; $('tfLbl2').textContent=r.timeframe;
+  $('rsn').textContent=r.reasoning_mn||''; $('tgTxt').textContent=buildTG(r);
+  $('result').style.display='flex';
+  saveH(r);
+  if(ib||is)setTimeout(()=>confetti(r.signal),280);
+}
+
+// ANALYZE
+function analyze(){
+  if(!b64){showErr('Зураг оруулна уу.');return;}
+  const key=$('api-key').value.trim();
+  if(!key){showErr('API key оруулна уу.');return;}
+  const btn=$('analyzeBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div> ШИНЖИЛЖ БАЙНА...';
+  $('errbox').style.display='none'; $('result').style.display='none';
+  const payload=JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SP,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'Analyze this XAUUSD chart. Return ONLY JSON.'}]}]});
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST','https://gtrader-proxy.bayrmagnaiganerdene.workers.dev',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.setRequestHeader('x-api-key',key);
+  xhr.setRequestHeader('anthropic-version','2023-06-01');
+  xhr.timeout=60000;
+  xhr.onload=function(){
+    try{
+      const data=JSON.parse(xhr.responseText);
+      if(data.error){showErr('API: '+(data.error.message||JSON.stringify(data.error)));}
+      else{
+        const raw=(data.content||[]).map(b=>b.text||'').join('');
+        const m=raw.match(/\{[\s\S]*\}/);
+        if(!m){showErr('JSON олдсонгүй: '+raw.slice(0,200));}
+        else{try{renderR(JSON.parse(m[0]));}catch(e){const lc=m[0].lastIndexOf(',"');if(lc>0){try{renderR(JSON.parse(m[0].slice(0,lc)+'}'));}catch(e2){showErr('Parse: '+e2.message);}}else showErr('Parse: '+e.message);}}
+      }
+    }catch(e){showErr('Response: '+e.message);}
+    btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ';
+  };
+  xhr.onerror=()=>{showErr('Сүлжээний алдаа');btn.disabled=false;btn.innerHTML='🔍 AI ШИНЖЛЭХ';};
+  xhr.ontimeout=()=>{showErr('Timeout');btn.disabled=false;btn.innerHTML='🔍 AI ШИНЖЛЭХ';};
+  xhr.send(payload);
+}
+
+// EVENTS
+$('analyzeBtn').addEventListener('click',analyze);
+$('clearBtn').addEventListener('click',clearAll);
+$('cpyBtn').addEventListener('click',()=>{navigator.clipboard.writeText($('tgTxt').textContent).then(()=>{const b=$('cpyBtn'),t=b.textContent;b.textContent='✓ ХУУЛАГДЛАА';setTimeout(()=>b.textContent=t,1400);});});
+$('wob').addEventListener('click',()=>markOut('w'));
+$('lob').addEventListener('click',()=>markOut('l'));
+$('wBtn').addEventListener('click',()=>addWR('w'));
+$('lBtn').addEventListener('click',()=>addWR('l'));
+$('rBtn').addEventListener('click',resetWR);
+document.querySelectorAll('.nbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
+$('themeBtn').addEventListener('click',()=>{document.body.classList.toggle('light');$('themeBtn').textContent=document.body.classList.contains('light')?'☀️':'🌙';localStorage.setItem('gt-th',document.body.classList.contains('light')?'l':'d');});
+if(localStorage.getItem('gt-th')==='l'){document.body.classList.add('light');$('themeBtn').textContent='☀️';}
+updWR(); rendH();
+</script>
+
+</body>
+</html>
