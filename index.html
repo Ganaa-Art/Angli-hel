@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>G-Trader Pro — AI Signal Robot</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070d;--bg2:#090d18;--panel:#0f1628;--panel2:#111a2f;
+  --line:#1c2842;--text:#eaf3ff;--muted:#7f93b2;
+  --cyan:#00fff0;--green:#00ffaa;--blue:#00ccff;
+  --pink:#ff00bf;--gold:#ffcc00;--red:#ff4d6d;
+  --shadow:0 0 24px rgba(0,255,240,.12),0 0 60px rgba(0,204,255,.06);
+  --radius:18px;--font:'Rajdhani',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:var(--font);color:var(--text);overflow-x:hidden;
+  background:radial-gradient(circle at 20% 10%,rgba(0,255,240,.08),transparent 22%),
+    radial-gradient(circle at 80% 90%,rgba(255,0,191,.06),transparent 24%),
+    linear-gradient(180deg,#04060b 0%,#080d17 100%);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.45;
+  background:linear-gradient(rgba(0,255,240,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,240,.035) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(circle at center,black 40%,transparent 100%);
+}
+body.light{--bg:#f0f4f8;--bg2:#e8eef5;--panel:#fff;--panel2:#f5f8fc;--line:#d0dbe8;--text:#1a2a3a;--muted:#5a7a98;background:#f0f4f8;}
+body.light::before{opacity:.15;}
+body.light header{background:rgba(240,244,248,.92);}
+body.light .brand-txt h1{color:#0a1a2a;}
+button,input{font:inherit}
+a{color:inherit;text-decoration:none}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 16px;background:rgba(5,7,13,.78);
+  backdrop-filter:blur(18px);border-bottom:1px solid rgba(28,40,66,.9);
+  box-shadow:0 8px 30px rgba(0,0,0,.22);
+}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.logo{width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(0,255,240,.4);box-shadow:0 0 20px rgba(0,255,240,.3);}
+.logo img{width:100%;height:100%;object-fit:cover;object-position:50% 15%;display:block;}
+.brand-txt h1{font-size:20px;line-height:1;letter-spacing:4px;color:#fff;white-space:nowrap;}
+.brand-txt p{margin-top:3px;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);white-space:nowrap;}
+.header-actions{display:flex;align-items:center;gap:10px;}
+.badge{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-family:var(--mono);font-size:10px;letter-spacing:2px;border:1px solid rgba(0,255,240,.18);background:rgba(0,255,240,.06);color:var(--cyan);white-space:nowrap;}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.8s infinite;}
+.theme-btn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,47,.95),rgba(10,14,25,.95));color:var(--text);cursor:pointer;transition:.25s;font-size:18px;}
+.theme-btn:hover{transform:translateY(-1px);border-color:rgba(0,255,240,.4);color:var(--cyan)}
+
+/* MAIN */
+main{position:relative;z-index:1;width:min(1080px,calc(100% - 28px));margin:22px auto 110px;display:grid;gap:16px;}
+
+/* TAB PANELS */
+.tab-panel{display:none}
+.tab-panel.active{display:grid;gap:16px}
+
+/* SECTION TITLE */
+.section-title{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--muted);margin:4px 2px 2px;}
+.section-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(0,255,240,.35),transparent);}
+
+/* GRID */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+
+/* CARD */
+.card{background:linear-gradient(180deg,rgba(17,26,47,.92),rgba(10,14,25,.96));border:1px solid rgba(28,40,66,.95);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+body.light .card{background:var(--panel);border-color:var(--line);box-shadow:0 2px 16px rgba(0,0,0,.08);}
+
+/* STRATEGY */
+.strategy{padding:20px 14px;text-align:center;transition:.25s;position:relative;}
+.strategy:hover{transform:translateY(-2px);border-color:rgba(0,255,240,.35);}
+.strategy .icon{font-size:22px;margin-bottom:8px}
+.strategy .small{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
+.strategy .big{font-size:15px;font-weight:700;color:#fff}
+body.light .strategy .big{color:var(--text);}
+
+/* UPLOAD */
+.upload{padding:18px;}
+.upload-box{border:1.5px dashed rgba(0,255,240,.25);border-radius:22px;min-height:220px;background:linear-gradient(180deg,rgba(9,13,24,.92),rgba(7,10,18,.94));display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:.25s;}
+body.light .upload-box{background:var(--bg2);border-color:var(--line);}
+.upload-box:hover,.upload-box.drag{border-color:rgba(0,255,240,.6);}
+.upload-inner{text-align:center;padding:24px}
+.upload-ico{font-size:44px;margin-bottom:12px}
+.upload-title{font-size:24px;font-weight:700;color:#fff;letter-spacing:1px}
+body.light .upload-title{color:var(--text);}
+.upload-sub{margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.4px}
+#preview{width:100%;height:auto;display:none;object-fit:contain;}
+#file-input{display:none}
+
+/* API */
+.api{padding:18px;}
+.api label{display:block;margin-bottom:10px;font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--muted)}
+.api-input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(28,40,66,.95);background:#080d17;color:var(--text);outline:none;font-family:var(--mono);font-size:12px;transition:.25s;}
+body.light .api-input{background:var(--bg2);border-color:var(--line);color:var(--text);}
+.api-input:focus{border-color:rgba(0,255,240,.5);box-shadow:0 0 0 4px rgba(0,255,240,.06);}
+.api-hint{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{border:none;cursor:pointer;transition:.25s;border-radius:14px;font-weight:700;}
+.btn-analyze{flex:1;min-height:54px;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px;font-size:16px;letter-spacing:2px;color:#02110f;background:linear-gradient(135deg,var(--cyan),var(--green),var(--blue));box-shadow:0 10px 30px rgba(0,255,240,.18);}
+.btn-analyze:hover:not(:disabled){transform:translateY(-2px);filter:saturate(1.2);}
+.btn-analyze:disabled{cursor:default;opacity:.7;filter:grayscale(.2);}
+.btn-clear{width:54px;height:54px;background:linear-gradient(180deg,rgba(17,26,47,.96),rgba(9,13,24,.96));border:1px solid rgba(28,40,66,.95);color:var(--muted);font-size:18px;}
+.btn-clear:hover{color:var(--red);border-color:rgba(255,77,109,.4)}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(2,17,15,.24);border-top-color:#02110f;animation:spin .7s linear infinite;}
+
+/* ERROR */
+#error-box{display:none;padding:14px 16px;border-radius:16px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.24);color:#ff8ca0;font-family:var(--mono);font-size:12px;line-height:1.7;}
+
+/* RESULT */
+#result{display:none;flex-direction:column;gap:16px;animation:fadeUp .35s ease;}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:24px;background:linear-gradient(180deg,rgba(17,26,47,.98),rgba(7,10,18,.98));border:1px solid rgba(0,255,240,.18);}
+.hero-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+.signal{font-size:54px;line-height:1;letter-spacing:4px;font-weight:800;}
+.signal-sub{margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted);}
+.conf{text-align:right;min-width:140px;}
+.conf-label{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted)}
+.conf-num{margin-top:6px;font-size:46px;font-weight:800;line-height:1;}
+.rr{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+.track{margin-top:18px;height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;}
+.fill{width:0%;height:100%;border-radius:inherit;transition:width 1.2s cubic-bezier(.22,1,.36,1);}
+.outcome-hero{display:flex;gap:10px;margin-top:16px;}
+.outcome-hero-btn{flex:1;padding:12px;border-radius:12px;border:1px solid;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:.2s;background:transparent;}
+.outcome-hero-btn:hover{transform:translateY(-1px);}
+.outcome-hero-btn.win{color:var(--green);border-color:rgba(0,255,170,.3);background:rgba(0,255,170,.08);}
+.outcome-hero-btn.lose{color:var(--red);border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.08);}
+.outcome-hero-btn:disabled{opacity:.4;cursor:default;transform:none;}
+#outcome-msg{display:none;text-align:center;padding:10px;font-family:var(--mono);font-size:12px;margin-top:8px;border-radius:10px;}
+
+/* CARD HEAD */
+.card-head{padding:14px 16px;border-bottom:1px solid rgba(28,40,66,.9);display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--muted)}
+body.light .card-head{border-color:var(--line);}
+
+/* ANALYSIS */
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;}
+.analysis-col{padding:16px;}
+.analysis-col:first-child{border-right:1px solid rgba(28,40,66,.9);}
+body.light .analysis-col:first-child{border-color:var(--line);}
+.analysis-label{margin-bottom:12px;font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.row:last-child{border-bottom:none}
+.name{font-size:14px;font-weight:700;color:#fff}
+body.light .name{color:var(--text);}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid transparent;white-space:nowrap;}
+.ok{background:rgba(0,255,170,.10);color:var(--green);border-color:rgba(0,255,170,.18)}
+.bad{background:rgba(255,77,109,.09);color:var(--red);border-color:rgba(255,77,109,.18)}
+.mid{background:rgba(255,204,0,.09);color:var(--gold);border-color:rgba(255,204,0,.18)}
+.dow-tags{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 16px;}
+.pill{padding:6px 12px;border-radius:999px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border:1px solid rgba(28,40,66,.95);background:rgba(255,255,255,.03)}
+.bull{color:var(--green);border-color:rgba(0,255,170,.20);background:rgba(0,255,170,.08)}
+.bear{color:var(--red);border-color:rgba(255,77,109,.22);background:rgba(255,77,109,.08)}
+.neu{color:var(--gold);border-color:rgba(255,204,0,.18);background:rgba(255,204,0,.08)}
+
+/* LEVELS */
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(28,40,66,.95);}
+body.light .levels{background:var(--line);}
+.level{background:linear-gradient(180deg,rgba(17,26,47,.96),rgba(9,13,24,.98));padding:14px 12px;}
+body.light .level{background:var(--panel);}
+.level-lbl{font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:6px}
+.level-val{font-family:var(--mono);font-size:15px;font-weight:700;}
+
+/* REASON */
+.reason{padding:16px;font-size:15px;line-height:1.9;color:#d7e8ff;}
+body.light .reason{color:var(--text);}
+
+/* TELEGRAM */
+.tg{padding:16px;}
+.tg-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;}
+.copy-btn{border:none;border-radius:12px;padding:8px 14px;cursor:pointer;background:rgba(0,255,240,.10);color:var(--cyan);border:1px solid rgba(0,255,240,.20);font-family:var(--mono);font-size:10px;letter-spacing:2px;}
+.copy-btn:hover{background:rgba(0,255,240,.16)}
+.tg-body{font-family:var(--mono);font-size:11px;line-height:1.9;white-space:pre-wrap;color:#9eb4d4;max-height:260px;overflow:auto;}
+body.light .tg-body{color:var(--muted);}
+
+/* WIN RATE */
+.wr{padding:16px;}
+.wr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.wr-cell{padding:14px 10px;text-align:center;border-radius:16px;border:1px solid rgba(28,40,66,.95);background:rgba(255,255,255,.03);}
+body.light .wr-cell{background:var(--bg2);border-color:var(--line);}
+.wr-num{font-size:28px;font-weight:800;line-height:1;margin-bottom:4px}
+.wr-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted)}
+.wr-bar-track{margin-top:14px;height:7px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;}
+body.light .wr-bar-track{background:var(--line);}
+.wr-bar-fill{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,var(--cyan),var(--green),var(--blue));transition:width .8s ease;}
+.outcome-btns{display:flex;gap:10px;margin-top:12px;}
+.outcome-btn{flex:1;border-radius:14px;padding:12px;border:1px solid rgba(28,40,66,.95);background:linear-gradient(180deg,rgba(17,26,47,.96),rgba(9,13,24,.98));color:var(--text);cursor:pointer;font-family:var(--font);font-weight:700;letter-spacing:1px;}
+body.light .outcome-btn{background:var(--bg2);border-color:var(--line);}
+.win{color:var(--green);border-color:rgba(0,255,170,.18)}
+.lose{color:var(--red);border-color:rgba(255,77,109,.18)}
+.reset{color:var(--muted)}
+.outcome-btn:hover{transform:translateY(-1px)}
+
+/* HISTORY */
+.history{padding:16px;}
+.history-list{display:grid;gap:10px;}
+.history-item{padding:14px 16px;border-radius:16px;border:1px solid rgba(28,40,66,.95);background:rgba(255,255,255,.03);display:flex;justify-content:space-between;gap:14px;align-items:center;}
+body.light .history-item{background:var(--bg2);border-color:var(--line);}
+.history-signal{font-size:18px;font-weight:800}
+.history-meta{margin-top:4px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+.history-right{text-align:right;font-family:var(--mono);font-size:11px;color:#b8c7de;}
+body.light .history-right{color:var(--text);}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:space-around;align-items:center;padding:10px 12px 14px;border-top:1px solid rgba(28,40,66,.95);background:rgba(5,7,13,.82);backdrop-filter:blur(18px);}
+body.light .bottom-nav{background:rgba(240,244,248,.92);border-color:var(--line);}
+.nav-item{flex:1;border:none;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border-radius:14px;}
+.nav-item:hover{background:rgba(0,255,240,.06)}
+.nav-item.active{color:var(--cyan);background:rgba(0,255,240,.08);}
+body.light .nav-item.active{color:var(--blue);}
+.nav-icon{font-size:20px;line-height:1}
+.nav-label{font-family:var(--mono);font-size:9px;letter-spacing:1px}
+
+/* CONFETTI */
+.confetti{position:fixed;top:-12px;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:9999;animation:fall linear forwards;}
+
+/* EMPTY STATE */
+.empty-state{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;}
+.empty-state .empty-ico{font-size:40px;margin-bottom:12px;opacity:.5;}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}.analysis-grid{grid-template-columns:1fr}.analysis-col:first-child{border-right:none;border-bottom:1px solid rgba(28,40,66,.9)}.levels{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){header{padding:12px 14px}.brand-txt h1{font-size:20px;letter-spacing:4px}.signal{font-size:40px}.conf-num{font-size:34px}.hero{padding:18px}.grid-4{grid-template-columns:1fr 1fr}.levels{grid-template-columns:1fr 1fr}.wr-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">
+      <img src="data:image/jpeg;base64,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" alt="G-Trader">
+    </div>
+    <div class="brand-txt">
+      <h1>G-TRADER</h1>
+      <p>DOW · FVG · BOS/CHOCH · H&S</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="badge"><span class="badge-dot"></span>AI LIVE</div>
+    <button class="theme-btn" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══════ SIGNAL TAB ══════ -->
+  <div class="tab-panel active" id="tab-signal">
+    <div class="section-title">СТРАТЕГИ</div>
+    <div class="grid-4">
+      <div class="card strategy"><div class="icon">📈</div><div class="small">DOW THEORY</div><div class="big">HH/HL · LH/LL</div></div>
+      <div class="card strategy"><div class="icon">🔲</div><div class="small">FVG</div><div class="big">Fair Value Gap</div></div>
+      <div class="card strategy"><div class="icon">💥</div><div class="small">BOS / CHOCH</div><div class="big">Structure Shift</div></div>
+      <div class="card strategy"><div class="icon">📐</div><div class="small">H&S</div><div class="big">Pattern Detect</div></div>
+    </div>
+
+    <div class="section-title">CHART ЗУРАГ</div>
+    <div class="card upload">
+      <div id="drop-zone" class="upload-box">
+        <div class="upload-inner" id="placeholder">
+          <div class="upload-ico">📊</div>
+          <div class="upload-title">Chart зураг оруулна уу</div>
+          <div class="upload-sub">TradingView screenshot — drag & drop эсвэл дарна уу</div>
+        </div>
+        <img id="preview" alt="Preview">
+      </div>
+      <input type="file" id="file-input" accept="image/*">
+    </div>
+
+    <div class="card api">
+      <label>ANTHROPIC API KEY</label>
+      <input type="password" id="api-key" class="api-input" placeholder="sk-ant-api03-...">
+      <div class="api-hint">🔑 console.anthropic.com → API Keys → Create Key</div>
+    </div>
+
+    <div class="btn-row" id="btn-row" style="display:none">
+      <button class="btn btn-analyze" id="analyzeBtn">🔍 AI ШИНЖЛЭХ</button>
+      <button class="btn btn-clear" id="clearAllBtn">✕</button>
+    </div>
+
+    <div id="error-box"></div>
+
+    <div id="result">
+      <div class="hero" id="hero">
+        <div class="hero-top">
+          <div>
+            <div class="signal" id="signalText">WAIT</div>
+            <div class="signal-sub" id="pairText">XAUUSD · —</div>
+          </div>
+          <div class="conf">
+            <div class="conf-label">ИТГЭЛЦҮҮР</div>
+            <div class="conf-num" id="confidenceText">0%</div>
+            <div class="rr" id="rrText">R:R —</div>
+          </div>
+        </div>
+        <div class="track"><div class="fill" id="confFill"></div></div>
+        <div class="outcome-hero">
+          <button class="outcome-hero-btn win" id="winOutcomeBtn">✅ ЯЛСАН</button>
+          <button class="outcome-hero-btn lose" id="loseOutcomeBtn">❌ ЯЛАГДСАН</button>
+        </div>
+        <div id="outcome-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span>ДҮН ШИНЖИЛГЭЭ</span><span id="signalBadge" class="tag mid">WAIT</span></div>
+        <div class="analysis-grid">
+          <div class="analysis-col">
+            <div class="analysis-label">DOW THEORY + FVG</div>
+            <div class="row"><span class="name">Trend</span><span class="tag mid" id="dowTrendTag">—</span></div>
+            <div class="row"><span class="name">Structure</span><span class="tag mid" id="dowStructTag">—</span></div>
+            <div class="row"><span class="name">Trend Intact</span><span class="tag mid" id="dowIntactTag">—</span></div>
+            <div class="row"><span class="name">Bearish FVG</span><span class="tag mid" id="bearFvgTag">—</span></div>
+            <div class="row"><span class="name">Bullish FVG</span><span class="tag mid" id="bullFvgTag">—</span></div>
+          </div>
+          <div class="analysis-col">
+            <div class="analysis-label">BOS / CHOCH + PATTERN</div>
+            <div class="row"><span class="name">BOS</span><span class="tag mid" id="bosTag">—</span></div>
+            <div class="row"><span class="name">CHOCH</span><span class="tag mid" id="chochTag">—</span></div>
+            <div class="row"><span class="name">Хэлбэр</span><span class="tag mid" id="typeTag">—</span></div>
+            <div class="row"><span class="name">Pattern</span><span class="tag mid" id="patternTag">—</span></div>
+            <div class="row"><span class="name">Гүйцэлт</span><span class="tag mid" id="completeTag">—</span></div>
+          </div>
+        </div>
+        <div class="dow-tags">
+          <span class="pill neu" id="dowPill">DOW</span>
+          <span class="pill neu" id="structPill">STRUCTURE</span>
+          <span class="pill neu" id="bosPill">BOS</span>
+          <span class="pill neu" id="patternPill">PATTERN</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span>ҮНИЙН ТҮВШИН</span><span>S/R + TP</span></div>
+        <div class="levels">
+          <div class="level"><div class="level-lbl">ОРОХ</div><div class="level-val" id="entryText" style="color:var(--blue)">—</div></div>
+          <div class="level"><div class="level-lbl">STOP LOSS</div><div class="level-val" id="slText" style="color:var(--red)">—</div></div>
+          <div class="level"><div class="level-lbl">S/R</div><div class="level-val" id="srText" style="color:var(--muted)">—</div></div>
+          <div class="level"><div class="level-lbl">TP 1 🎯</div><div class="level-val" id="tp1Text" style="color:var(--green)">—</div></div>
+          <div class="level"><div class="level-lbl">TP 2 🎯</div><div class="level-val" id="tp2Text" style="color:var(--green)">—</div></div>
+          <div class="level"><div class="level-lbl">TP 3 🎯</div><div class="level-val" id="tp3Text" style="color:var(--green)">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span>AI ТАЙЛБАР</span><span id="tfText">—</span></div>
+        <div class="reason" id="reasonText">Зураг оруулж шинжилгээ эхлүүлнэ.</div>
+      </div>
+
+      <div class="card tg">
+        <div class="tg-top">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted)">✈️ TELEGRAM SIGNAL</div>
+          <button class="copy-btn" id="copyBtn">📋 ХУУЛАХ</button>
+        </div>
+        <div class="tg-body" id="tgText">—</div>
+      </div>
+    </div>
+  </div><!-- /tab-signal -->
+
+  <!-- ══════ STATS TAB ══════ -->
+  <div class="tab-panel" id="tab-stats">
+    <div class="section-title">WIN RATE СТАТИСТИК</div>
+    <div class="card wr">
+      <div class="card-head"><span>📊 WIN RATE</span><span>ЛОКАЛ СТАТИСТИК</span></div>
+      <div class="wr-grid">
+        <div class="wr-cell"><div class="wr-num" id="wrWin" style="color:var(--green)">0</div><div class="wr-lbl">ЯЛСАН</div></div>
+        <div class="wr-cell"><div class="wr-num" id="wrLose" style="color:var(--red)">0</div><div class="wr-lbl">ЯЛАГДСАН</div></div>
+        <div class="wr-cell"><div class="wr-num" id="wrPct" style="color:var(--gold)">0%</div><div class="wr-lbl">WIN RATE</div></div>
+      </div>
+      <div class="wr-bar-track"><div class="wr-bar-fill" id="wrBar"></div></div>
+      <div class="outcome-btns">
+        <button class="outcome-btn win" id="winBtn">✅ ЯЛСАН</button>
+        <button class="outcome-btn lose" id="loseBtn">❌ ЯЛАГДСАН</button>
+        <button class="outcome-btn reset" id="resetBtn">🔄 RESET</button>
+      </div>
+    </div>
+
+    <div class="section-title">СҮҮЛИЙН SIGNAL</div>
+    <div class="card" id="last-signal-card">
+      <div class="card-head"><span>ХАМГИЙН СҮҮЛИЙН SIGNAL</span></div>
+      <div id="last-signal-content">
+        <div class="empty-state"><div class="empty-ico">📡</div>Одоогоор signal байхгүй байна.</div>
+      </div>
+    </div>
+  </div><!-- /tab-stats -->
+
+  <!-- ══════ HISTORY TAB ══════ -->
+  <div class="tab-panel" id="tab-history">
+    <div class="section-title">SIGNAL ТҮҮХ</div>
+    <div class="card history">
+      <div class="card-head"><span>📋 SIGNAL ТҮҮХ</span><span>СҮҮЛИЙН 20</span></div>
+      <div class="history-list" id="historyList">
+        <div class="empty-state"><div class="empty-ico">🗂</div>Одоогоор signal түүх байхгүй байна.</div>
+      </div>
+    </div>
+  </div><!-- /tab-history -->
+
+</main>
+
+<div class="bottom-nav">
+  <button class="nav-item active" data-tab="signal"><div class="nav-icon">📡</div><div class="nav-label">SIGNAL</div></button>
+  <button class="nav-item" data-tab="stats"><div class="nav-icon">📊</div><div class="nav-label">СТАТИСТИК</div></button>
+  <button class="nav-item" data-tab="history"><div class="nav-icon">🗂</div><div class="nav-label">ТҮҮХ</div></button>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are G-Trader Pro, an expert XAUUSD signal AI. Analyze the chart using these 4 methods in exact order. Only give BUY or SELL when ALL 4 methods confirm together. If any method conflicts → output WAIT.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+METHOD 1: DOW THEORY (Trend Direction)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Map every visible swing high and swing low.
+• BULLISH trend = series of Higher Highs (HH) + Higher Lows (HL)
+• BEARISH trend = series of Lower Highs (LH) + Lower Lows (LL)
+• SIDEWAYS = no clear sequence, mixed HH/LL or HL/LH
+• Trend is INTACT if the most recent swing respects the pattern
+• Trend is BROKEN if a HL was taken out in uptrend or LH was taken out in downtrend
+→ Only trade in the direction of the confirmed trend. No counter-trend trades.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+METHOD 2: FVG — Fair Value Gap (Entry Zone)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scan every 3-candle sequence on the chart:
+• BEARISH FVG: candle[1].high < candle[-1].low — gap between them = imbalance zone (price tends to return and sell from here)
+• BULLISH FVG: candle[1].low > candle[-1].high — gap = imbalance zone (price tends to return and buy from here)
+Count ALL visible FVGs. Then determine:
+• If 2+ bearish FVGs exist in a downtrend → strong bearish confirmation
+• If the FIRST bullish FVG appears after a series of bearish FVGs → potential reversal zone, watch for BUY
+• The closest unmitigated FVG in trend direction = best entry zone
+• A mitigated FVG (price already traded through it) = no longer valid
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+METHOD 3: BOS / CHOCH (Confirmation Trigger)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• BOS (Break of Structure): price breaks the PREVIOUS swing high (bullish BOS) or swing low (bearish BOS) — confirms trend continuation
+• CHOCH (Change of Character): price breaks the OPPOSITE direction swing — first sign of trend reversal
+Rules:
+- In a BULLISH trend: wait for price to pull back to FVG/support, then confirm bullish BOS → BUY
+- In a BEARISH trend: wait for price to pull back to FVG/resistance, then confirm bearish BOS → SELL
+- If CHOCH appears: trend may be reversing, wait for retest before entering
+- BOS/CHOCH must be on a CLOSED candle, not just a wick
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+METHOD 4: H&S PATTERN (High-Confidence Reversal)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Head & Shoulders (H&S): forms after uptrend → Left Shoulder, Head (highest), Right Shoulder → neckline break = SELL
+• Inverse H&S: forms after downtrend → Left Shoulder, Head (lowest), Right Shoulder → neckline break = BUY
+Completion rules:
+• 0-40%: only shoulder + head visible, not confirmed
+• 41-70%: right shoulder forming, wait
+• 71-89%: right shoulder complete, watching neckline
+• 90-100%: neckline broken on closed candle = confirmed signal
+→ If H&S pattern is 90%+ complete AND aligns with Dow trend AND FVG entry zone AND BOS confirmed = VERY HIGH confidence signal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIGNAL RULES (strict):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BUY only when ALL true:
+  ✓ Dow = BULLISH (HH+HL sequence confirmed)
+  ✓ Bullish FVG present and price is at or inside it
+  ✓ Bullish BOS confirmed on closed candle (or Inverse H&S neckline break)
+  ✓ H&S pattern = None or Inverse H&S ≥70%
+
+SELL only when ALL true:
+  ✓ Dow = BEARISH (LH+LL sequence confirmed)
+  ✓ Bearish FVG present (2+ preferred) and price is at or inside it
+  ✓ Bearish BOS confirmed on closed candle (or H&S neckline break)
+  ✓ H&S pattern = None or H&S ≥70%
+
+WAIT if:
+  • Any method conflicts with others
+  • Dow = SIDEWAYS
+  • No clear FVG in trade direction
+  • No BOS confirmation
+  • Risk:Reward less than 1:2
+
+PRICE LEVELS:
+  • Entry: at the FVG midpoint or just above/below the BOS level
+  • Stop Loss: beyond the last swing low (BUY) or swing high (SELL), 5-10 pips buffer
+  • TP1: nearest swing high/low or FVG fill (1:2 RR minimum)
+  • TP2: next major structure level (1:3 RR)
+  • TP3: full trend target or opposite FVG zone (1:5 RR)
+
+CONFIDENCE:
+  90-100%: All 4 methods perfectly aligned + H&S confirmed
+  75-89%: All 4 methods aligned, H&S forming or absent
+  60-74%: 3 methods aligned, 1 neutral
+  Below 60%: output WAIT
+
+Respond ONLY with this exact JSON, no markdown, no explanation outside JSON:
+{"signal":"BUY or SELL or WAIT","pair":"XAUUSD","timeframe":"detected timeframe","dow_trend":"BULLISH or BEARISH or SIDEWAYS","dow_structure":"HH/HL or LH/LL or MIXED","dow_intact":true,"fvg_bearish_count":0,"fvg_bullish_count":0,"fvg_signal":"bearish or bullish or neutral","bos_detected":true,"choch_detected":false,"bos_choch_type":"BOS or CHOCH or NONE","bos_choch_direction":"bullish or bearish or none","pattern_detected":"Inverse H&S or H&S or Forming or None","pattern_completion":0,"support_resistance":"key price level","entry":"price","sl":"price","tp1":"price","tp2":"price","tp3":"price","rr_ratio":"1:3","confidence":0,"reasoning_mn":"Монгол хэлээр: DOW онол ямар байна, FVG хаана байна, BOS/CHOCH баталгаажсан уу, H&S pattern байна уу — бүрэн тайлбар","reasoning_en":"Brief English summary"}`;
+
+let b64 = null;
+let signalHistory = JSON.parse(localStorage.getItem('gtrader-history') || '[]');
+let wrData = JSON.parse(localStorage.getItem('gtrader-wr') || '{"win":0,"lose":0}');
+const $ = id => document.getElementById(id);
+
+function setTag(el, text, cls){ el.className = 'tag ' + cls; el.textContent = text; }
+function setPill(el, text, cls){ el.className = 'pill ' + cls; el.textContent = text; }
+
+// ── TAB NAVIGATION ──────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector('.nav-item[data-tab="' + tab + '"]').classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ── IMAGE LOAD ──────────────────────────────────────────
+function loadFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1000;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){
+        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const url = c.toDataURL('image/jpeg', .82);
+      b64 = url.split(',')[1];
+      $('preview').src = url;
+      $('preview').style.display = 'block';
+      $('placeholder').style.display = 'none';
+      $('drop-zone').classList.add('has-image');
+      $('btn-row').style.display = 'flex';
+      $('error-box').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+const dz = $('drop-zone');
+dz.addEventListener('click', () => $('file-input').click());
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); });
+$('file-input').addEventListener('change', e => loadFile(e.target.files[0]));
+
+function clearAll(){
+  b64 = null;
+  $('preview').style.display = 'none';
+  $('placeholder').style.display = 'block';
+  dz.classList.remove('drag','has-image');
+  $('btn-row').style.display = 'none';
+  $('result').style.display = 'none';
+  $('error-box').style.display = 'none';
+}
+
+function showError(msg){
+  const el = $('error-box');
+  el.style.display = 'block';
+  el.textContent = '⚠️ ' + msg;
+}
+
+// ── TELEGRAM ────────────────────────────────────────────
+function buildTelegram(r){
+  const icon = r.signal === 'BUY' ? '🟢' : r.signal === 'SELL' ? '🔴' : '🟡';
+  const arrow = r.signal === 'BUY' ? '📈' : r.signal === 'SELL' ? '📉' : '⏳';
+  const bos = r.choch_detected ? `CHOCH (${r.bos_choch_direction})` : r.bos_detected ? `BOS (${r.bos_choch_direction})` : 'Байхгүй';
+
+  // Pip calculation (XAUUSD: 1 pip = 0.10)
+  function pips(a, b) {
+    const diff = Math.abs(parseFloat(a) - parseFloat(b));
+    return isNaN(diff) ? '—' : (diff * 10).toFixed(0) + ' pip';
+  }
+
+  const slPips  = pips(r.entry, r.sl);
+  const tp1Pips = pips(r.entry, r.tp1);
+  const tp2Pips = pips(r.entry, r.tp2);
+  const tp3Pips = pips(r.entry, r.tp3);
+
+  return `${icon} G-TRADER SIGNAL ${icon}
+
+${arrow} ${r.signal} — ${r.pair} | ${r.timeframe}
+━━━━━━━━━━━━━━━━━━━━
+📌 Орох:   ${r.entry}
+🛑 SL:     ${r.sl}  (${slPips})
+🎯 TP1:    ${r.tp1}  (+${tp1Pips})
+🎯 TP2:    ${r.tp2}  (+${tp2Pips})
+🎯 TP3:    ${r.tp3}  (+${tp3Pips})
+⚖️ R:R =   ${r.rr_ratio}
+━━━━━━━━━━━━━━━━━━━━
+📊 Dow:    ${r.dow_trend} (${r.dow_structure})
+🔲 FVG:    Bear ${r.fvg_bearish_count} | Bull ${r.fvg_bullish_count}
+💥 BOS:    ${bos}
+📐 H&S:    ${r.pattern_detected} (${r.pattern_completion}%)
+🔒 Итгэл: ${r.confidence}%
+━━━━━━━━━━━━━━━━━━━━
+💡 ${r.reasoning_mn}
+
+⚡️ @GTrader_FX`;
+}
+
+// ── CONFETTI ────────────────────────────────────────────
+function launchConfetti(type){
+  const colors = type === 'BUY' ? ['#00fff0','#00ffaa','#00ccff','#ff00bf'] : ['#ff4d6d','#ff00bf','#ffcc00','#00ccff'];
+  for(let i=0;i<70;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    const size = 6 + Math.random()*8;
+    el.style.cssText = `left:${Math.random()*100}vw;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.4}s;`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ── HISTORY ─────────────────────────────────────────────
+function saveHistory(r){
+  signalHistory.unshift({time:new Date().toLocaleString('mn-MN'),signal:r.signal,pair:r.pair,entry:r.entry,sl:r.sl,tp1:r.tp1,confidence:r.confidence});
+  signalHistory = signalHistory.slice(0,20);
+  localStorage.setItem('gtrader-history', JSON.stringify(signalHistory));
+  renderHistory();
+  renderLastSignal();
+}
+
+function renderHistory(){
+  const el = $('historyList');
+  if(!signalHistory.length){
+    el.innerHTML = '<div class="empty-state"><div class="empty-ico">🗂</div>Одоогоор signal түүх байхгүй байна.</div>';
+    return;
+  }
+  el.innerHTML = signalHistory.map(h => {
+    const cls = h.signal === 'BUY' ? 'bull' : h.signal === 'SELL' ? 'bear' : 'neu';
+    return `<div class="history-item">
+      <div class="history-left">
+        <div class="history-signal ${cls}" style="display:inline-block;padding:4px 10px;border-radius:999px;">${h.signal}</div>
+        <div class="history-meta">${h.time}</div>
+      </div>
+      <div class="history-right">
+        <div>${h.pair}</div>
+        <div>Entry ${h.entry}</div>
+        <div>SL ${h.sl} · TP1 ${h.tp1}</div>
+        <div>${h.confidence}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLastSignal(){
+  if(!signalHistory.length) return;
+  const h = signalHistory[0];
+  const cls = h.signal === 'BUY' ? 'bull' : h.signal === 'SELL' ? 'bear' : 'neu';
+  const sc = h.signal === 'BUY' ? 'var(--green)' : h.signal === 'SELL' ? 'var(--red)' : 'var(--gold)';
+  $('last-signal-content').innerHTML = `
+    <div style="padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="history-signal ${cls}" style="display:inline-block;padding:6px 16px;border-radius:999px;font-size:22px">${h.signal}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${h.time}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:5px">ОРОХ</div>
+          <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--blue)">${h.entry}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:5px">STOP LOSS</div>
+          <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--red)">${h.sl}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:5px">TP 1</div>
+          <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--green)">${h.tp1}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:5px">ИТГЭЛЦҮҮР</div>
+          <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sc}">${h.confidence}%</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── WIN RATE ────────────────────────────────────────────
+function updateWRUI(){
+  const total = wrData.win + wrData.lose;
+  const pct = total ? Math.round((wrData.win / total) * 100) : 0;
+  $('wrWin').textContent = wrData.win;
+  $('wrLose').textContent = wrData.lose;
+  $('wrPct').textContent = pct + '%';
+  $('wrBar').style.width = pct + '%';
+}
+
+function addWR(type){
+  if(type === 'win'){ wrData.win++; launchConfetti('BUY'); }
+  else wrData.lose++;
+  localStorage.setItem('gtrader-wr', JSON.stringify(wrData));
+  updateWRUI();
+}
+
+function resetWR(){
+  if(!confirm('Win rate reset хийх үү?')) return;
+  wrData = {win:0,lose:0};
+  localStorage.setItem('gtrader-wr', JSON.stringify(wrData));
+  updateWRUI();
+}
+
+function markOutcome(type){
+  addWR(type);
+  const msg = $('outcome-msg');
+  if(type === 'win'){
+    msg.style.cssText = 'display:block;background:rgba(0,255,170,.08);color:var(--green);border:1px solid rgba(0,255,170,.2);padding:10px;border-radius:10px;font-family:var(--mono);font-size:12px;text-align:center;margin-top:8px;';
+    msg.textContent = '🎉 Амжилттай! Win rate шинэчлэгдлээ.';
+  } else {
+    msg.style.cssText = 'display:block;background:rgba(255,77,109,.06);color:var(--red);border:1px solid rgba(255,77,109,.18);padding:10px;border-radius:10px;font-family:var(--mono);font-size:12px;text-align:center;margin-top:8px;';
+    msg.textContent = '📉 Тэмдэглэгдлээ. Дараагийн signal!';
+  }
+  $('winOutcomeBtn').disabled = true;
+  $('loseOutcomeBtn').disabled = true;
+}
+
+// ── RENDER RESULT ───────────────────────────────────────
+function renderResult(r){
+  const isBuy = r.signal === 'BUY';
+  const isSell = r.signal === 'SELL';
+  const sc = isBuy ? 'var(--green)' : isSell ? 'var(--red)' : 'var(--gold)';
+
+  $('signalText').textContent = isBuy ? '📈 BUY' : isSell ? '📉 SELL' : '⏳ WAIT';
+  $('signalText').style.color = sc;
+  $('pairText').textContent = r.pair + ' · ' + r.timeframe;
+  $('confidenceText').textContent = r.confidence + '%';
+  $('confidenceText').style.color = sc;
+  $('rrText').textContent = 'R:R ' + r.rr_ratio;
+  setTimeout(() => { $('confFill').style.width = Math.min(100, Number(r.confidence)||0) + '%'; }, 70);
+  $('confFill').style.background = isBuy ? 'linear-gradient(90deg,var(--cyan),var(--green))' : isSell ? 'linear-gradient(90deg,var(--red),var(--pink))' : 'linear-gradient(90deg,var(--gold),var(--blue))';
+  $('hero').style.borderColor = isBuy ? 'rgba(0,255,170,.25)' : isSell ? 'rgba(255,77,109,.24)' : 'rgba(255,204,0,.20)';
+
+  $('winOutcomeBtn').disabled = false;
+  $('loseOutcomeBtn').disabled = false;
+  $('outcome-msg').style.display = 'none';
+  $('outcome-msg').textContent = '';
+
+  setTag($('signalBadge'), r.signal, isBuy?'ok':isSell?'bad':'mid');
+  setTag($('dowTrendTag'), r.dow_trend, r.dow_trend==='BULLISH'?'ok':r.dow_trend==='BEARISH'?'bad':'mid');
+  setTag($('dowStructTag'), r.dow_structure, r.dow_structure.includes('HH')?'ok':r.dow_structure.includes('LH')?'bad':'mid');
+  setTag($('dowIntactTag'), r.dow_intact?'YES':'NO', r.dow_intact?'ok':'bad');
+  setTag($('bearFvgTag'), r.fvg_bearish_count+' bearish', r.fvg_bearish_count>=3?'ok':'mid');
+  setTag($('bullFvgTag'), r.fvg_bullish_count+' bullish', r.fvg_bullish_count>=1?'ok':'bad');
+  setTag($('bosTag'), r.bos_detected?'YES':'NO', r.bos_detected?'ok':'bad');
+  setTag($('chochTag'), r.choch_detected?'YES':'NO', r.choch_detected?'ok':'bad');
+  setTag($('typeTag'), r.bos_choch_type, r.bos_choch_type!=='NONE'?'ok':'bad');
+  setTag($('patternTag'), r.pattern_detected, r.pattern_detected!=='None'?'ok':'bad');
+  setTag($('completeTag'), r.pattern_completion+'%', Number(r.pattern_completion)>=70?'ok':Number(r.pattern_completion)>=40?'mid':'bad');
+
+  setPill($('dowPill'), r.dow_trend, r.dow_trend==='BULLISH'?'bull':r.dow_trend==='BEARISH'?'bear':'neu');
+  setPill($('structPill'), r.dow_structure, r.dow_structure.includes('HH')?'bull':r.dow_structure.includes('LH')?'bear':'neu');
+  setPill($('bosPill'), r.bos_choch_type+(r.bos_choch_direction!=='none'?' → '+r.bos_choch_direction:''), r.bos_choch_type==='CHOCH'?'bull':r.bos_choch_type==='BOS'?'neu':'bear');
+  setPill($('patternPill'), r.pattern_detected, r.pattern_detected!=='None'?'bull':'neu');
+
+  $('entryText').textContent = r.entry;
+  $('slText').textContent = r.sl;
+  $('srText').textContent = r.support_resistance;
+  $('tp1Text').textContent = r.tp1;
+  $('tp2Text').textContent = r.tp2;
+  $('tp3Text').textContent = r.tp3;
+  $('tfText').textContent = r.timeframe;
+  $('reasonText').textContent = r.reasoning_mn || '';
+  $('tgText').textContent = buildTelegram(r);
+
+  $('result').style.display = 'flex';
+  saveHistory(r);
+  if(isBuy || isSell) setTimeout(() => launchConfetti(r.signal), 280);
+  // Switch to signal tab
+  switchTab('signal');
+}
+
+// ── ANALYZE ─────────────────────────────────────────────
+async function analyze(){
+  if(!b64){ showError('Зураг оруулна уу.'); return; }
+  const key = $('api-key').value.trim();
+  if(!key){ showError('Anthropic API key оруулна уу.'); return; }
+  const btn = $('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> ШИНЖИЛЖ БАЙНА...';
+  $('error-box').style.display = 'none';
+  $('result').style.display = 'none';
+
+  const payload = JSON.stringify({
+    model:'claude-sonnet-4-5',
+    max_tokens:2000,
+    system:SYSTEM_PROMPT,
+    messages:[{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+      {type:'text',text:'Analyze this XAUUSD chart. Return ONLY the JSON.'}
+    ]}]
+  });
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST','https://gtrader-proxy.bayrmagnaiganerdene.workers.dev',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.setRequestHeader('x-api-key', key);
+  xhr.setRequestHeader('anthropic-version','2023-06-01');
+  xhr.timeout = 60000;
+
+  xhr.onload = function(){
+    try{
+      const data = JSON.parse(xhr.responseText);
+      if(data.error){
+        showError('API: ' + (data.error.message || JSON.stringify(data.error)));
+      } else {
+        const raw = (data.content||[]).map(b => b.text||'').join('');
+        const m = raw.match(/\{[\s\S]*\}/);
+        if(!m){ showError('JSON олдсонгүй: ' + raw.slice(0,200)); }
+        else {
+          try { renderResult(JSON.parse(m[0])); }
+          catch(err){
+            const lc = m[0].lastIndexOf(',"');
+            if(lc > 0){
+              try { renderResult(JSON.parse(m[0].slice(0,lc)+'}')); }
+              catch(e2){ showError('Parse: '+e2.message); }
+            } else showError('Parse: '+err.message);
+          }
+        }
+      }
+    } catch(e){ showError('Response: '+e.message); }
+    btn.disabled = false;
+    btn.innerHTML = '🔍 AI ШИНЖЛЭХ';
+  };
+  xhr.onerror = function(){ showError('Сүлжээний алдаа'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.ontimeout = function(){ showError('Timeout'); btn.disabled=false; btn.innerHTML='🔍 AI ШИНЖЛЭХ'; };
+  xhr.send(payload);
+}
+
+// ── EVENT LISTENERS ─────────────────────────────────────
+$('analyzeBtn').addEventListener('click', analyze);
+$('clearAllBtn').addEventListener('click', clearAll);
+$('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText($('tgText').textContent).then(() => {
+    const b = $('copyBtn'); const t = b.textContent;
+    b.textContent = '✓ ХУУЛАГДЛАА';
+    setTimeout(() => b.textContent = t, 1400);
+  });
+});
+$('winBtn').addEventListener('click', () => addWR('win'));
+$('loseBtn').addEventListener('click', () => addWR('lose'));
+$('resetBtn').addEventListener('click', resetWR);
+$('winOutcomeBtn').addEventListener('click', () => markOutcome('win'));
+$('loseOutcomeBtn').addEventListener('click', () => markOutcome('lose'));
+
+$('themeBtn').addEventListener('click', () => {
+  document.body.classList.toggle('light');
+  $('themeBtn').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+  localStorage.setItem('gtrader-theme', document.body.classList.contains('light') ? 'light' : 'dark');
+});
+
+if(localStorage.getItem('gtrader-theme') === 'light'){
+  document.body.classList.add('light');
+  $('themeBtn').textContent = '☀️';
+}
+
+updateWRUI();
+renderHistory();
+renderLastSignal();
+</script>
+</body>
+</html>
